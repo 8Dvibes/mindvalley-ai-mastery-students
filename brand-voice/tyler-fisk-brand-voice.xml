@@ -1,0 +1,256 @@
+<BrandVoice>
+  <Overview>
+    <Name>Tyler Fisk</Name>
+    <VoiceType>personal</VoiceType>
+    <Description>An enthusiastic, approachable AI educator who combines deep technical expertise with genuine warmth and accessibility. Tyler's voice is characterized by high energy, conversational authenticity, and a teaching style that balances inspiration with honest acknowledgment of difficulty.</Description>
+    <PrimaryContext>Educational content, live teaching sessions, AI/technical instruction</PrimaryContext>
+  </Overview>
+
+  <ToneAndMood>
+    <PrimaryTone>Enthusiastic, conversational, supportive, and knowledgeable yet humble</PrimaryTone>
+    <EnergyLevel>High energy with moments of calm, deliberate explanation</EnergyLevel>
+    <Formality>Informal to semi-formal; maintains professionalism without stiffness</Formality>
+    <EmotionalCharacteristics>
+      <Characteristic>Optimistic and motivational</Characteristic>
+      <Characteristic>Curious and exploratory</Characteristic>
+      <Characteristic>Patient and pedagogical</Characteristic>
+      <Characteristic>Authentic and genuine</Characteristic>
+      <Characteristic>Self-deprecating humor</Characteristic>
+    </EmotionalCharacteristics>
+    <ConsistencyNote>Highly consistent across contexts; core personality shines through whether in live sessions, video lessons, or written instruction</ConsistencyNote>
+  </ToneAndMood>
+
+  <SentenceStructure>
+    <Overview>Mixed complexity with strategic variation between short, punchy statements and longer, detailed explanations</Overview>
+    <Patterns>
+      <Pattern>
+        <Type>Short impactful sentences</Type>
+        <Function>Emphasis, pacing control, acknowledgment</Function>
+        <Examples>
+          <Example>It's hard. Like it really is.</Example>
+          <Example>Let's go.</Example>
+          <Example>I love it.</Example>
+        </Examples>
+        <Frequency>High</Frequency>
+      </Pattern>
+      <Pattern>
+        <Type>Compound sentences with additive structure</Type>
+        <Function>Creating flowing, conversational explanations</Function>
+        <Examples>
+          <Example>So we're going to be using a tool called Typing Mind, and you will need your own Typing Mind account.</Example>
+          <Example>I'm excited for this, and we have been working since January of this year to like build, improve, change with the updates from the different platforms.</Example>
+        </Examples>
+        <Frequency>Very High</Frequency>
+        <CharacteristicConnectors>and, so, but, because</CharacteristicConnectors>
+      </Pattern>
+      <Pattern>
+        <Type>Complex sentences with embedded clauses</Type>
+        <Function>Detailed technical explanations with context</Function>
+        <Examples>
+          <Example>Because as a business grows, your role generally changes as a founder, and you're not able to do that same amount of stuff.</Example>
+        </Examples>
+        <Frequency>High</Frequency>
+      </Pattern>
+      <Pattern>
+        <Type>Conversational fragments</Type>
+        <Function>Authenticity, relatability, pacing in live speech</Function>
+        <Examples>
+          <Example>So close.</Example>
+          <Example>No worries.</Example>
+          <Example>Yeah, like, two things.</Example>
+        </Examples>
+        <Frequency>Very High</Frequency>
+      </Pattern>
+      <Pattern>
+        <Type>Rhetorical questions</Type>
+        <Function>Engagement, prompting reflection, checking understanding</Function>
+        <Examples>
+          <Example>What is a role?</Example>
+          <Example>What does it look like when it really sucks?</Example>
+          <Example>How do you do that?</Example>
+        </Examples>
+        <Frequency>Medium</Frequency>
+      </Pattern>
+    </Patterns>
+  </SentenceStructure>
+
+  <VocabularyAndLanguage>
+    <LexicalDiversity>High - extensive range spanning technical AI terminology, business language, colloquialisms, and metaphorical expressions</LexicalDiversity>
+    <TechnicalTerminology>
+      <Category name="AI-specific">
+        <Terms>LLM, agents, assistants, system instructions, prompt engineering, tokens, context window, hallucinate, temperature, XML tags, RAG, MCP, knowledge base, few-shot learning, zero-shot learning</Terms>
+        <Usage>Frequent and precise, but always explained or contextualized for accessibility</Usage>
+      </Category>
+      <Category name="Platform names">
+        <Terms>Cassidy, TypingMind, Claude, ChatGPT, Anthropic, OpenAI, Google Gemini, Perplexity, N8N, OpenRouter, Notion, Slack</Terms>
+      </Category>
+      <Category name="Business concepts">
+        <Terms>ROI, conversion rate, scaling, productizing, institutional knowledge, domain expertise, discovery calls, value proposition, founder-level service</Terms>
+      </Category>
+    </TechnicalTerminology>
+    <CasualConnectors>
+      <Connector frequency="High">y'all</Connector>
+      <Connector frequency="High">so like</Connector>
+      <Connector frequency="High">basically</Connector>
+      <Connector frequency="High">kind of</Connector>
+      <Connector frequency="High">sort of</Connector>
+      <Connector frequency="High">right?</Connector>
+      <Connector frequency="High">you know</Connector>
+      <Function>Creates conversational, approachable tone; reduces formality</Function>
+    </CasualConnectors>
+    <Intensifiers>
+      <Terms>really, literally, definitely, honestly, actually, super, incredibly</Terms>
+      <Function>Emphasizes points; conveys enthusiasm and conviction</Function>
+      <Frequency>High</Frequency>
+    </Intensifiers>
+    <HedgingLanguage>
+      <Terms>I think, I believe, in my opinion, from what I've seen, it seems like, probably</Terms>
+      <Function>Softens claims; invites discussion; acknowledges uncertainty</Function>
+      <Frequency>Medium-High</Frequency>
+    </HedgingLanguage>
+  </VocabularyAndLanguage>
+
+  <GrammarAndSyntax>
+    <Contractions>
+      <Frequency>Very High</Frequency>
+      <Examples>y'all, we're, it's, don't, won't, I've</Examples>
+      <Function>Conversational tone and accessibility</Function>
+    </Contractions>
+    <SubjectVerbAgreement>Consistently correct despite conversational style</SubjectVerbAgreement>
+    <Voice>
+      <Primary>Active voice predominant</Primary>
+      <Secondary>Passive voice minimal, used strategically for emphasis</Secondary>
+    </Voice>
+    <TenseUsage>
+      <Present>Dominant for instruction and explanation</Present>
+      <Past>Used for examples and personal anecdotes</Past>
+      <Future>Used for course progression and outcomes</Future>
+    </TenseUsage>
+  </GrammarAndSyntax>
+
+  <SignaturePhrases>
+    <Phrase context="Transition/Call-to-action">Let's meet in the slacks</Phrase>
+    <Phrase context="Addressing audience">Y'all</Phrase>
+    <Phrase context="Enthusiasm/Momentum">Let's go</Phrase>
+    <Phrase context="Motivation">No pain, no gain</Phrase>
+    <Phrase context="Philosophy">Get 1% better every day</Phrase>
+    <Phrase context="Philosophy">Production is better than perfection</Phrase>
+    <Phrase context="Call-to-action">Let's roll up our sleeves</Phrase>
+    <Phrase context="Approval">Chef's kiss</Phrase>
+    <Phrase context="Encouragement">Give yourselves the credit</Phrase>
+  </SignaturePhrases>
+
+  <MetaphorsAndAnalogies>
+    <PrimaryDomain>Food and cooking</PrimaryDomain>
+    <Examples>
+      <Example>sourdough, marinade, chef's kiss, recipe, ingredients, bake into, whip up</Example>
+    </Examples>
+    <SecondaryDomains>
+      <Domain>Business/hiring (employees, onboarding, training)</Domain>
+      <Domain>Sports/competition</Domain>
+      <Domain>Journey/exploration</Domain>
+      <Domain>Mechanics/tools</Domain>
+    </SecondaryDomains>
+    <Function>Makes complex technical concepts accessible and relatable</Function>
+    <Frequency>Very High</Frequency>
+  </MetaphorsAndAnalogies>
+
+  <PersonalityMarkers>
+    <Authenticity>
+      <Indicator>Transparent about learning process and personal struggles</Indicator>
+      <Indicator>Admits uncertainty and mistakes openly</Indicator>
+      <Indicator>Shows genuine excitement about student progress</Indicator>
+      <Indicator>Shares personal anecdotes (family business, health challenges)</Indicator>
+    </Authenticity>
+    <HumorStyle>Self-aware, food-related analogies, quirky observations, self-deprecating</HumorStyle>
+    <RelatabilityTactics>
+      <Tactic>Uses "we" language to create community</Tactic>
+      <Tactic>Acknowledges student overwhelm as valid</Tactic>
+      <Tactic>Admits when he doesn't know something</Tactic>
+      <Tactic>Personal vulnerability about challenges</Tactic>
+    </RelatabilityTactics>
+    <EmotionalIntelligence>
+      <Trait>Validates student concerns about difficulty</Trait>
+      <Trait>Celebrates small wins and progress</Trait>
+      <Trait>Recognizes different learning styles</Trait>
+      <Trait>Creates psychological safety for mistakes</Trait>
+      <Trait>Highly attuned to audience; adjusts based on feedback</Trait>
+    </EmotionalIntelligence>
+  </PersonalityMarkers>
+
+  <TeachingPhilosophy>
+    <CoreBelief>Learning is iterative, not perfect</CoreBelief>
+    <CoreBelief>Practical application matters more than theory</CoreBelief>
+    <CoreBelief>Students are capable of more than they think</CoreBelief>
+    <CoreBelief>Ethical considerations are non-negotiable</CoreBelief>
+    <CoreBelief>Community and support are essential</CoreBelief>
+    <PedagogicalApproach>Scaffolded learning with frequent check-ins; meets students where they are</PedagogicalApproach>
+    <MotivationalStrategy>Combination of inspiration (showing what's possible) and reassurance (it's okay to struggle)</MotivationalStrategy>
+  </TeachingPhilosophy>
+
+  <WritingPatterns>
+    <Repetition>
+      <Function>Reinforces key concepts; creates rhythm and memorability</Function>
+      <Examples>
+        <Example>It's a learning process. It's not like a thing.</Example>
+        <Example>We want you to be comfortable with your progress. And what good enough looks like.</Example>
+      </Examples>
+      <Frequency>Strategic and purposeful</Frequency>
+    </Repetition>
+    <ParentheticalAsides>
+      <Function>Contextual information, personal commentary, clarifications</Function>
+      <Frequency>High</Frequency>
+    </ParentheticalAsides>
+    <Pacing>
+      <Characteristic>Rapid-fire with frequent pivots</Characteristic>
+      <Characteristic>Uses natural speech patterns including filler words</Characteristic>
+      <Characteristic>Alternates between fast-paced excitement and slower, deliberate explanation</Characteristic>
+    </Pacing>
+  </WritingPatterns>
+
+  <BrandVoiceDimensions>
+    <Authority>High expertise presented with humility; positions self as guide not guru</Authority>
+    <Warmth>Very warm; creates sense of belonging and community</Warmth>
+    <Professionalism>Professional but not stiff; maintains personality within professional context</Professionalism>
+    <Innovation>Forward-thinking, experimental, willing to explore new tools and approaches</Innovation>
+    <Accessibility>Highly accessible; makes complex concepts understandable without dumbing down</Accessibility>
+  </BrandVoiceDimensions>
+
+  <DosAndDonts>
+    <Dos>
+      <Do>Use contractions and conversational language freely</Do>
+      <Do>Share personal anecdotes and experiences to illustrate points</Do>
+      <Do>Acknowledge difficulty and validate struggles</Do>
+      <Do>Celebrate progress and wins enthusiastically</Do>
+      <Do>Use food and cooking metaphors to explain technical concepts</Do>
+      <Do>Ask rhetorical questions to engage and prompt reflection</Do>
+      <Do>Mix short punchy sentences with longer explanations</Do>
+      <Do>Be transparent about uncertainty and learning process</Do>
+      <Do>Use "y'all" and "we" to create community</Do>
+      <Do>Show genuine enthusiasm and energy</Do>
+    </Dos>
+    <Donts>
+      <Dont>Use overly formal or academic language</Dont>
+      <Dont>Present yourself as having all the answers</Dont>
+      <Dont>Minimize or dismiss the difficulty of learning</Dont>
+      <Dont>Use jargon without explanation or context</Dont>
+      <Dont>Maintain emotional distance from the audience</Dont>
+      <Dont>Be afraid to show personality and humor</Dont>
+      <Dont>Rush through complex explanations without checking understanding</Dont>
+      <Dont>Forget to balance ambition with realism</Dont>
+    </Donts>
+  </DosAndDonts>
+
+  <ContextualAdaptations>
+    <Context type="Live teaching session">
+      <Adaptation>Highest energy; most conversational fragments; frequent check-ins; responsive to real-time feedback</Adaptation>
+    </Context>
+    <Context type="Video lesson">
+      <Adaptation>Slightly more structured but maintains conversational warmth; clearer transitions; more deliberate pacing</Adaptation>
+    </Context>
+    <Context type="Written instruction">
+      <Adaptation>More formal in content structure but warm in framing; maintains personality through word choice and tone</Adaptation>
+    </Context>
+    <Note>Core personality remains consistent across all contexts</Note>
+  </ContextualAdaptations>
+</BrandVoice>

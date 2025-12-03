@@ -1,0 +1,138 @@
+{
+  "document_metadata": {
+    "title": "Tyler Fisk - Brand Voice Megadoc Analysis",
+    "total_sources": 3,
+    "estimated_word_count": 35000,
+    "source_types": [
+      "Live teaching session (142 minutes)",
+      "Video lesson snippet",
+      "Video lesson snippet"
+    ],
+    "analysis_focus": "Sentence structure patterns and linguistic characteristics"
+  },
+  "sentence_structure_overview": {
+    "dominant_patterns": [
+      "Conversational fragments with high frequency of informal connectors",
+      "Mix of short, punchy sentences with longer, complex explanations",
+      "Frequent use of parenthetical asides and clarifications",
+      "Rhetorical questions used for engagement and pacing",
+      "Repetition of key phrases for emphasis and memorability"
+    ],
+    "average_sentence_complexity": "Medium-High (varies significantly by context)",
+    "formality_level": "Informal-to-Conversational (teaching context)",
+    "primary_audience_adaptation": "Learners with mixed technical backgrounds"
+  },
+  "detailed_sentence_structure_analysis": {
+    "sentence_types": {
+      "simple_sentences": {
+        "frequency": "High",
+        "examples": [
+          "All right.",
+          "Yeah, no worries.",
+          "That's awesome.",
+          "I love it.",
+          "Let's go."
+        ],
+        "function": "Pacing, acknowledgment, transitions, enthusiasm markers",
+        "pattern_notes": "Often used as standalone utterances in live speech; creates rhythm and engagement"
+      },
+      "compound_sentences": {
+        "frequency": "Very High",
+        "examples": [
+          "So we're going to be using a tool called Typing Mind, and you will need your own Typing Mind account.",
+          "I'm excited for this, and we have been working since January of this year to like build, improve, change with the updates from the different platforms.",
+          "It's not something that I would actually go deploy automations in, and it's not that at all."
+        ],
+        "pattern_notes": "Frequently connected with 'and' rather than other conjunctions; creates flowing, additive structure",
+        "characteristic_connectors": ["and", "so", "but", "because"]
+      },
+      "complex_sentences": {
+        "frequency": "High",
+        "examples": [
+          "Like, TypingMind, you could think of this, if y'all have ever been in OpenAI's Playground or Google's AI Studio, Anthropics, like Workbench, like their whole backend, where you can go in and work in it from an API layer, you have all the switches and dials, all the things.",
+          "Because as a business grows, your role generally changes as a founder, and you're not able to do that same amount of stuff.",
+          "What happens now in this system that we've built is that the growers team will have a one hour, roughly one hour call with a client, and that transcript from that call is one of the inputs in here."
+        ],
+        "subordination_patterns": "Heavy use of embedded clauses; multiple levels of nesting",
+        "characteristic_structures": [
+          "Introductory dependent clauses",
+          "Parenthetical insertions mid-sentence",
+          "Relative clauses with 'that' and 'where'",
+          "Conditional structures with 'if'"
+        ]
+      },
+      "fragmented_sentences": {
+        "frequency": "Very High",
+        "examples": [
+          "So close.",
+          "No worries.",
+          "Yeah, like, two things.",
+          "Not kindergarten anymore, people.",
+          "Just know that it's hard."
+        ],
+        "function": "Emphasis, conversational authenticity, pacing in live speech",
+        "context": "Predominantly in live session; creates informal, accessible tone"
+      }
+    },
+    "clause_patterns": {
+      "independent_clauses": {
+        "characteristic_structure": "Often short and declarative; frequently used as sentence openers",
+        "examples": [
+          "I'm excited for this.",
+          "We have been working since January.",
+          "That's the way that it is.",
+          "You're going to learn so much."
+        ]
+      },
+      "dependent_clauses": {
+        "frequency": "High",
+        "positioning": "Both initial and embedded positions",
+        "types": [
+          {
+            "type": "Temporal clauses",
+            "examples": [
+              "When you get this, and when you go out in the real world",
+              "As you're thinking through this more and building it out",
+              "Once you've hit that"
+            ]
+          },
+          {
+            "type": "Conditional clauses",
+            "examples": [
+              "If you come from, like, a very detailed, like, expect the same output every single time",
+              "If you're not saying that, drop that into the chat",
+              "If you haven't done your week four project"
+            ]
+          },
+          {
+            "type": "Causal clauses",
+            "examples": [
+              "Because this is what we're talking about here is how to scale your business with AI",
+              "Because it's what I'm personally diving into myself much more",
+              "Because we have all this training data for you to go in and emulate that"
+            ]
+          },
+          {
+            "type": "Relative clauses",
+            "examples": [
+              "That would take subject matter experts, domain experts in their fields that, you know, took decades",
+              "Where you can go in and build out any kinds of assistants and agents",
+              "That is something that you're going to have to evaluate"
+            ]
+          }
+        ]
+      }
+    },
+    "phrase_level_patterns": {
+      "prepositional_phrases": {
+        "frequency": "Very High",
+        "characteristic_usage": "Often stacked or chained; used for specificity and context",
+        "examples": [
+          "In the same way with that real estate organization",
+          "At the very end of that",
+          "In the weeds on evals as like a production level eval"
+        ]
+      }
+    }
+  }
+}

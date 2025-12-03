@@ -1,0 +1,185 @@
+{
+  "analysis_metadata": {
+    "document_title": "Tyler Fisk - Brand Voice Megadoc",
+    "total_word_count": "~35000 words (estimated)",
+    "source_count": 3,
+    "content_types": [
+      "Live teaching session transcript",
+      "Video lesson snippet",
+      "Instructional walkthrough"
+    ],
+    "speaker_primary": "Tyler Fisk",
+    "co_speakers": [
+      "Sara Davison",
+      "Vijita Kumar (Vegeta)",
+      "Alvaro Grasso"
+    ]
+  },
+  "vocabulary_patterns": {
+    "lexical_diversity": {
+      "score": "High",
+      "description": "Extensive vocabulary range spanning technical AI terminology, business language, colloquialisms, and metaphorical expressions",
+      "examples": [
+        "agentic workflows",
+        "orchestration",
+        "RAG retrieval",
+        "squishiness",
+        "mad scientist mode",
+        "productizing founder level"
+      ]
+    },
+    "technical_terminology": {
+      "frequency": "Very High",
+      "categories": {
+        "AI_specific": [
+          "LLM",
+          "agents",
+          "assistants",
+          "system instructions",
+          "prompt engineering",
+          "tokens",
+          "context window",
+          "hallucinate",
+          "temperature",
+          "XML tags",
+          "RAG",
+          "MCP",
+          "knowledge base"
+        ],
+        "platform_names": [
+          "Cassidy",
+          "TypingMind",
+          "Claude",
+          "ChatGPT",
+          "Anthropic",
+          "OpenAI",
+          "Google Gemini",
+          "Perplexity",
+          "N8N",
+          "OpenRouter"
+        ],
+        "business_concepts": [
+          "ROI",
+          "conversion rate",
+          "scaling",
+          "productizing",
+          "institutional knowledge",
+          "domain expertise",
+          "discovery calls",
+          "value proposition"
+        ]
+      }
+    },
+    "linguistic_markers": {
+      "casual_connectors": {
+        "frequency": "High",
+        "examples": [
+          "y'all",
+          "so like",
+          "basically",
+          "kind of",
+          "sort of",
+          "right?",
+          "you know"
+        ],
+        "function": "Creates conversational, approachable tone; reduces formality"
+      },
+      "intensifiers": {
+        "frequency": "High",
+        "examples": [
+          "really",
+          "literally",
+          "definitely",
+          "honestly",
+          "actually",
+          "super",
+          "incredibly"
+        ],
+        "function": "Emphasizes points; conveys enthusiasm and conviction"
+      },
+      "hedging_language": {
+        "frequency": "Medium-High",
+        "examples": [
+          "I think",
+          "I believe",
+          "in my opinion",
+          "from what I've seen",
+          "it seems like",
+          "probably"
+        ],
+        "function": "Softens claims; invites discussion; acknowledges uncertainty"
+      }
+    }
+  },
+  "tone_and_personality": {
+    "primary_characteristics": [
+      "Enthusiastic",
+      "Approachable",
+      "Knowledgeable",
+      "Encouraging",
+      "Quirky",
+      "Supportive",
+      "Practical"
+    ],
+    "tone_markers": {
+      "enthusiasm": {
+        "examples": [
+          "I'm excited for this",
+          "This is going to be fun",
+          "This is so cool",
+          "I love it"
+        ],
+        "frequency": "High",
+        "context": "When discussing AI capabilities, student progress, or project outcomes"
+      },
+      "humor": {
+        "examples": [
+          "I don't think I've ever been called enthusiastic",
+          "my brain hurts",
+          "That's freaking awesome",
+          "chef's kiss"
+        ],
+        "frequency": "Medium",
+        "style": "Self-deprecating, food-related, relatable"
+      },
+      "mentorship": {
+        "examples": [
+          "I'm excited because... when you get this, and when you go out in the real world",
+          "give yourselves the credit",
+          "I just want you all to take the time to recognize that in your own selves"
+        ],
+        "frequency": "High",
+        "context": "When addressing student concerns or celebrating progress"
+      }
+    }
+  },
+  "communication_style": {
+    "sentence_structure": {
+      "pattern": "Mixed - alternates between short, punchy statements and longer, detailed explanations",
+      "examples": {
+        "short": "Yeah, for sure.",
+        "medium": "So what this process looks like now is as best as they could, they've tried to train members of their greenhouse sales team to do what Roger does.",
+        "long": "Because as a business grows, your role generally changes as a founder, and you're not able to do that same amount of stuff, and that's what we see in growers, so my dad, Roger Fisk, is the founder of Growers, and he used to literally give personalized advice to someone who would be thinking about becoming a market gardener."
+      }
+    },
+    "pacing_techniques": {
+      "repetition": {
+        "function": "Reinforces key concepts; creates rhythm",
+        "examples": [
+          "It's a learning process. It's not like a thing.",
+          "We want you to be comfortable with your progress. And what good enough looks like.",
+          "This is not to kind of, like, scare you or put you up for anything. It's just transparently what it takes."
+        ]
+      },
+      "rhetorical_questions": {
+        "frequency": "Medium",
+        "function": "Engages audience; prompts reflection",
+        "examples": [
+          "What is a role?",
+          "What does it look like when it really sucks?",
+          "How do you do that?"
+        ]
+      }
+    }
+  }
+}
