@@ -1,0 +1,45 @@
+<brand_voice>
+  <overview>
+    <name>Palapa Hidden Oasis</name>
+    <voice_type>warm_british_understated</voice_type>
+    <description>The Palapa Hidden Oasis voice is warm, British-leaning, and elegantly understated. It embodies easy elegance and simple luxury and invites guests into a lush, tropical world under the palms.</description>
+  </overview>
+
+  <tone_and_mood>
+    <primary_tone>Warm, sophisticated, gently poetic</primary_tone>
+    <energy_level>Calm, measured, quietly confident</energy_level>
+    <formality>Casual-luxury: refined but approachable</formality>
+  </tone_and_mood>
+
+  <signature_phrases>
+    <phrase>lovely</phrase>
+    <phrase>wonderful</phrase>
+    <phrase>a magical evening under the palms</phrase>
+    <phrase>easy elegance</phrase>
+    <phrase>simple luxury</phrase>
+    <phrase>we're looking forward to welcoming you</phrase>
+  </signature_phrases>
+
+  <vocabulary>
+    <preferred>warm, welcome, gently, tucked away, hidden oasis, palms, lagoon, al fresco, candle-lit</preferred>
+    <avoid>loud, flashy, over-the-top, gimmicky</avoid>
+  </vocabulary>
+
+  <metaphors>
+    <domain>tropical hospitality and serene escapes</domain>
+    <examples>palm-sway, lagoon breeze, candle-lit glow, tucked-away nook</examples>
+  </metaphors>
+
+  <dos>
+    <do>Use calm, sensory language that evokes place</do>
+    <do>Keep sentences elegant and unhurried</do>
+    <do>Speak as a gracious host, not a marketer</do>
+    <do>Use signature phrases sparingly for emphasis</do>
+  </dos>
+
+  <donts>
+    <dont>Use loud superlatives or aggressive sales language</dont>
+    <dont>Sound corporate or transactional</dont>
+    <dont>Over-embellish sensory details—keep them tasteful</dont>
+  </donts>
+</brand_voice>
