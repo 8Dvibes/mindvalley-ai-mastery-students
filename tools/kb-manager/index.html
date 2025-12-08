@@ -1,0 +1,2169 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Stacks · Knowledge Base Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================
+       THE STACKS - Knowledge Base Manager
+       MindValley AI Mastery × AI Build Lab × Gemini
+       ============================================ */
+
+    /* CSS Reset */
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* ============================================
+       DESIGN TOKENS - Dark Theme (Default)
+       Inspired by: Constellation/Space aesthetic
+       ============================================ */
+    :root {
+      /* Core palette */
+      --void: #07070a;
+      --space: #0c0c12;
+      --nebula: #12121a;
+      --cosmos: #1a1a24;
+      --stardust: #252532;
+
+      /* Accent: Gemini cyan constellation */
+      --accent: #06b6d4;
+      --accent-glow: rgba(6, 182, 212, 0.15);
+      --accent-bright: #22d3ee;
+
+      /* Secondary: Golden stars */
+      --gold: #fbbf24;
+      --gold-dim: rgba(251, 191, 36, 0.6);
+
+      /* Status */
+      --success: #10b981;
+      --success-bg: rgba(16, 185, 129, 0.1);
+      --warning: #f59e0b;
+      --warning-bg: rgba(245, 158, 11, 0.1);
+      --error: #ef4444;
+      --error-bg: rgba(239, 68, 68, 0.1);
+
+      /* Text */
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+
+      /* Borders & surfaces */
+      --border: rgba(255, 255, 255, 0.08);
+      --border-hover: rgba(255, 255, 255, 0.15);
+      --surface: rgba(255, 255, 255, 0.03);
+      --surface-hover: rgba(255, 255, 255, 0.06);
+
+      /* Typography */
+      --font-display: 'Space Grotesk', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+
+      /* Transitions */
+      --transition-fast: 150ms ease;
+      --transition-base: 250ms ease;
+      --transition-slow: 400ms ease;
+
+      /* Spacing */
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+    }
+
+    /* ============================================
+       LIGHT THEME
+       ============================================ */
+    [data-theme="light"] {
+      --void: #ffffff;
+      --space: #f8fafc;
+      --nebula: #f1f5f9;
+      --cosmos: #e2e8f0;
+      --stardust: #cbd5e1;
+
+      --accent: #06b6d4;
+      --accent-glow: rgba(6, 182, 212, 0.1);
+      --accent-bright: #06b6d4;
+
+      --gold: #d97706;
+      --gold-dim: rgba(217, 119, 6, 0.6);
+
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+
+      --border: rgba(0, 0, 0, 0.08);
+      --border-hover: rgba(0, 0, 0, 0.15);
+      --surface: rgba(0, 0, 0, 0.02);
+      --surface-hover: rgba(0, 0, 0, 0.04);
+    }
+
+    /* ============================================
+       BASE STYLES
+       ============================================ */
+    html {
+      font-size: 16px;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font-display);
+      background: var(--void);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Star field background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 20% 20%, var(--accent-glow) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(251, 191, 36, 0.05) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    [data-theme="dark"] body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(1px 1px at 20px 30px, rgba(255,255,255,0.3), transparent),
+        radial-gradient(1px 1px at 40px 70px, rgba(255,255,255,0.2), transparent),
+        radial-gradient(1px 1px at 50px 160px, rgba(255,255,255,0.3), transparent),
+        radial-gradient(1px 1px at 90px 40px, rgba(255,255,255,0.2), transparent),
+        radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.3), transparent),
+        radial-gradient(1px 1px at 160px 120px, rgba(255,255,255,0.2), transparent),
+        radial-gradient(2px 2px at 200px 50px, var(--gold-dim), transparent),
+        radial-gradient(1px 1px at 220px 140px, rgba(255,255,255,0.25), transparent),
+        radial-gradient(1px 1px at 280px 90px, rgba(255,255,255,0.2), transparent),
+        radial-gradient(2px 2px at 320px 180px, var(--accent), transparent);
+      background-repeat: repeat;
+      background-size: 350px 200px;
+      opacity: 0.4;
+      pointer-events: none;
+      z-index: -1;
+      animation: starTwinkle 8s ease-in-out infinite;
+    }
+
+    @keyframes starTwinkle {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 0.6; }
+    }
+
+    /* ============================================
+       CONTAINER
+       ============================================ */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    /* ============================================
+       HEADER
+       ============================================ */
+    header {
+      background: linear-gradient(180deg, var(--space) 0%, transparent 100%);
+      padding: 1.5rem 0 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    /* Logo */
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo-mark {
+      width: 44px;
+      height: 44px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .logo-mark span {
+      display: block;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent) 0%, var(--gold) 100%);
+      border-radius: 2px;
+      transform-origin: left;
+      animation: stackIn 0.6s ease-out backwards;
+    }
+
+    .logo-mark span:nth-child(1) { width: 100%; animation-delay: 0.1s; }
+    .logo-mark span:nth-child(2) { width: 85%; animation-delay: 0.2s; }
+    .logo-mark span:nth-child(3) { width: 70%; animation-delay: 0.3s; }
+    .logo-mark span:nth-child(4) { width: 55%; animation-delay: 0.4s; }
+    .logo-mark span:nth-child(5) { width: 40%; animation-delay: 0.5s; }
+
+    @keyframes stackIn {
+      from {
+        transform: scaleX(0);
+        opacity: 0;
+      }
+      to {
+        transform: scaleX(1);
+        opacity: 1;
+      }
+    }
+
+    .logo-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .logo-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .logo-tagline {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    /* Header controls */
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    /* Theme toggle */
+    .theme-toggle {
+      width: 40px;
+      height: 40px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--surface);
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      transition: all var(--transition-fast);
+    }
+
+    .theme-toggle:hover {
+      background: var(--surface-hover);
+      border-color: var(--border-hover);
+      color: var(--text-primary);
+    }
+
+    .theme-toggle .icon-sun { display: none; }
+    .theme-toggle .icon-moon { display: block; }
+
+    [data-theme="light"] .theme-toggle .icon-sun { display: block; }
+    [data-theme="light"] .theme-toggle .icon-moon { display: none; }
+
+    /* Store selector */
+    .store-selector {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .store-selector label {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    select {
+      padding: 0.625rem 2.25rem 0.625rem 0.875rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--surface);
+      color: var(--text-primary);
+      font-family: var(--font-display);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.75rem center;
+      min-width: 200px;
+      transition: all var(--transition-fast);
+    }
+
+    select:hover {
+      border-color: var(--border-hover);
+      background-color: var(--surface-hover);
+    }
+
+    select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    /* ============================================
+       MAIN CONTENT
+       ============================================ */
+    main {
+      padding: 1rem 0 4rem;
+    }
+
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      position: relative;
+      animation: fadeSlideIn 0.5s ease-out backwards;
+    }
+
+    .section:nth-child(1) { animation-delay: 0.1s; }
+    .section:nth-child(2) { animation-delay: 0.2s; }
+    .section:nth-child(3) { animation-delay: 0.3s; }
+
+    @keyframes fadeSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+
+    .section-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .section-title .icon {
+      color: var(--accent);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.625rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      background: var(--accent-glow);
+      color: var(--accent);
+      border-radius: var(--radius-sm);
+      margin-left: 0.5rem;
+    }
+
+    /* ============================================
+       UPLOAD ZONE
+       ============================================ */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-lg);
+      padding: 3rem 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all var(--transition-base);
+      background: linear-gradient(135deg, var(--surface) 0%, transparent 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .upload-zone::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--accent-glow) 0%, transparent 50%);
+      opacity: 0;
+      transition: opacity var(--transition-base);
+    }
+
+    .upload-zone:hover,
+    .upload-zone.dragover {
+      border-color: var(--accent);
+      background: var(--surface-hover);
+    }
+
+    .upload-zone:hover::before,
+    .upload-zone.dragover::before {
+      opacity: 1;
+    }
+
+    .upload-zone-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .upload-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 1rem;
+      background: var(--accent-glow);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+      color: var(--accent);
+      transition: transform var(--transition-base);
+    }
+
+    .upload-zone:hover .upload-icon {
+      transform: scale(1.1);
+    }
+
+    .upload-zone-text {
+      color: var(--text-secondary);
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .upload-zone-text strong {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .upload-zone-formats {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .file-info-trigger {
+      cursor: pointer;
+      color: var(--accent);
+      font-size: 0.875rem;
+      opacity: 0.7;
+      transition: opacity var(--transition-fast);
+    }
+
+    .file-info-trigger:hover {
+      opacity: 1;
+    }
+
+    .file-type-info {
+      display: none;
+      margin-top: 1rem;
+      padding: 1.25rem;
+      background: var(--nebula);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      text-align: left;
+    }
+
+    .file-type-info.active {
+      display: block;
+      animation: slideDown var(--transition-base);
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .file-type-info-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-primary);
+    }
+
+    .file-type-category {
+      margin-bottom: 1rem;
+    }
+
+    .file-type-category:last-of-type {
+      margin-bottom: 0.75rem;
+    }
+
+    .file-type-category-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .file-info-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.25rem;
+      cursor: pointer;
+      padding: 0.25rem;
+      line-height: 1;
+      transition: color var(--transition-fast);
+    }
+
+    .file-info-close:hover {
+      color: var(--text-primary);
+    }
+
+    .file-type-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .file-type-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.5rem 0.75rem;
+      background: var(--surface);
+      border-radius: var(--radius-sm);
+    }
+
+    .file-type-ext {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-glow);
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--radius-sm);
+    }
+
+    .file-type-desc {
+      font-size: 0.8125rem;
+      color: var(--text-secondary);
+    }
+
+    .file-type-note {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      padding: 0.75rem;
+      background: var(--surface);
+      border-radius: var(--radius-sm);
+      line-height: 1.6;
+    }
+
+    .file-type-note strong {
+      color: var(--text-secondary);
+    }
+
+    #fileInput {
+      display: none;
+    }
+
+    /* ============================================
+       DOCUMENTS LIST
+       ============================================ */
+    .documents-list {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+
+    .document-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto auto;
+      gap: 1rem;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      align-items: center;
+      transition: background var(--transition-fast);
+    }
+
+    .document-row:last-child {
+      border-bottom: none;
+    }
+
+    .document-row:hover {
+      background: var(--surface-hover);
+    }
+
+    .document-name {
+      font-weight: 500;
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      color: var(--text-primary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .document-type {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.25rem 0.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+    }
+
+    .document-status {
+      font-size: 0.75rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      color: var(--success);
+    }
+
+    .document-status::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: currentColor;
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .empty-state {
+      padding: 4rem 1.5rem;
+      text-align: center;
+    }
+
+    .empty-state-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 1.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      color: var(--text-muted);
+    }
+
+    .empty-state-text {
+      color: var(--text-secondary);
+      font-size: 0.9375rem;
+      max-width: 280px;
+      margin: 0 auto;
+    }
+
+    /* ============================================
+       BUTTONS
+       ============================================ */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.625rem 1.125rem;
+      border: none;
+      border-radius: var(--radius-md);
+      font-family: var(--font-display);
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-bright) 100%);
+      color: var(--void);
+      box-shadow: 0 2px 8px var(--accent-glow);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px var(--accent-glow);
+    }
+
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--surface-hover);
+      border-color: var(--border-hover);
+      color: var(--text-primary);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-muted);
+      padding: 0.5rem;
+    }
+
+    .btn-ghost:hover {
+      background: var(--surface);
+      color: var(--text-primary);
+    }
+
+    .btn-danger {
+      background: transparent;
+      color: var(--error);
+      padding: 0.5rem;
+    }
+
+    .btn-danger:hover {
+      background: var(--error-bg);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    /* ============================================
+       ACTIVITY LOG
+       ============================================ */
+    .activity-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      user-select: none;
+      padding: 0.5rem;
+      margin: -0.5rem;
+      border-radius: var(--radius-sm);
+      transition: background var(--transition-fast);
+    }
+
+    .activity-header:hover {
+      background: var(--surface);
+    }
+
+    .clear-log-btn {
+      margin-left: auto;
+      font-size: 0.75rem;
+      padding: 0.25rem 0.625rem;
+      opacity: 0;
+      transition: opacity var(--transition-fast);
+    }
+
+    .activity-header:hover .clear-log-btn {
+      opacity: 1;
+    }
+
+    .activity-toggle-icon {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      transition: transform var(--transition-fast);
+    }
+
+    .activity-header.expanded .activity-toggle-icon {
+      transform: rotate(90deg);
+    }
+
+    .activity-log {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height var(--transition-slow);
+    }
+
+    .activity-log.expanded {
+      max-height: 400px;
+      overflow-y: auto;
+      margin-top: 1rem;
+    }
+
+    .activity-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8125rem;
+    }
+
+    .activity-item:last-child {
+      border-bottom: none;
+    }
+
+    .activity-icon {
+      flex-shrink: 0;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.875rem;
+    }
+
+    .activity-time {
+      flex-shrink: 0;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      min-width: 60px;
+    }
+
+    .activity-date {
+      font-size: 0.625rem;
+      color: var(--text-muted);
+      opacity: 0.7;
+      margin-left: 0.25rem;
+    }
+
+    .activity-message {
+      flex: 1;
+      color: var(--text-secondary);
+    }
+
+    /* ============================================
+       SETTINGS PANEL
+       ============================================ */
+    .settings-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.875rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      margin-bottom: 1rem;
+    }
+
+    .settings-toggle:hover {
+      background: var(--surface-hover);
+      border-color: var(--border-hover);
+      color: var(--text-primary);
+    }
+
+    .settings-panel {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height var(--transition-slow);
+    }
+
+    .settings-panel.expanded {
+      max-height: 500px;
+    }
+
+    .settings-content {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      padding-right: 3.5rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--void);
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      transition: all var(--transition-fast);
+    }
+
+    input:hover {
+      border-color: var(--border-hover);
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .input-suffix {
+      position: absolute;
+      right: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--accent);
+      cursor: pointer;
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--radius-sm);
+      transition: background var(--transition-fast);
+    }
+
+    .input-suffix:hover {
+      background: var(--accent-glow);
+    }
+
+    .help-text {
+      margin-top: 0.5rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .help-text a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .help-text a:hover {
+      text-decoration: underline;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .current-store-display {
+      padding: 0.75rem 1rem;
+      background: var(--void);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    /* ============================================
+       MODAL
+       ============================================ */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 1rem;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .modal-backdrop.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal {
+      background: var(--nebula);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 2rem;
+      max-width: 440px;
+      width: 100%;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      animation: modalSlideIn 0.3s ease;
+    }
+
+    @keyframes modalSlideIn {
+      from {
+        transform: translateY(-24px) scale(0.96);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+    }
+
+    .modal-header {
+      margin-bottom: 1.5rem;
+    }
+
+    .modal-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .modal-description {
+      color: var(--text-secondary);
+      font-size: 0.9375rem;
+    }
+
+    .modal-body {
+      margin-bottom: 1.5rem;
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+    }
+
+    /* ============================================
+       TOAST
+       ============================================ */
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      background: var(--nebula);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.4);
+      transform: translateY(calc(100% + 2rem));
+      transition: transform var(--transition-base);
+      z-index: 2000;
+      max-width: 400px;
+    }
+
+    .toast.active {
+      transform: translateY(0);
+    }
+
+    .toast.success { border-left: 3px solid var(--success); }
+    .toast.error { border-left: 3px solid var(--error); }
+    .toast.warning { border-left: 3px solid var(--warning); }
+
+    .toast-icon {
+      font-size: 1.25rem;
+    }
+
+    .toast-message {
+      flex: 1;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    /* ============================================
+       SPINNER
+       ============================================ */
+    .spinner {
+      width: 24px;
+      height: 24px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(7, 7, 10, 0.8);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-lg);
+      z-index: 10;
+    }
+
+    [data-theme="light"] .loading-overlay {
+      background: rgba(255, 255, 255, 0.8);
+    }
+
+    /* ============================================
+       BRANDING FOOTER
+       ============================================ */
+    .branding {
+      text-align: center;
+      padding: 2rem 0;
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+    }
+
+    .branding-text {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .branding-text a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .branding-text a:hover {
+      text-decoration: underline;
+    }
+
+    .branding-divider {
+      color: var(--border);
+    }
+
+    /* ============================================
+       RESPONSIVE
+       ============================================ */
+    @media (max-width: 768px) {
+      .header-content {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .header-controls {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .store-selector {
+        flex: 1;
+      }
+
+      select {
+        width: 100%;
+        min-width: auto;
+      }
+
+      .document-row {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+      }
+
+      .document-type,
+      .document-status {
+        justify-self: start;
+      }
+
+      .form-row {
+        flex-direction: column;
+      }
+
+      .form-row .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <div class="logo">
+          <div class="logo-mark">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <div class="logo-text">
+            <div class="logo-title">The Stacks</div>
+            <div class="logo-tagline">Knowledge Base Manager</div>
+          </div>
+        </div>
+        <div class="header-controls">
+          <div class="store-selector" id="storeSelectorContainer" style="display: none;">
+            <label for="storeSelect">Store:</label>
+            <select id="storeSelect"></select>
+          </div>
+          <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+            <span class="icon-moon">🌙</span>
+            <span class="icon-sun">☀️</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main>
+    <div class="container">
+      <!-- Upload Zone -->
+      <div class="section" id="uploadSection" style="display: none;">
+        <div class="upload-zone" id="uploadZone">
+          <div class="upload-zone-content">
+            <div class="upload-icon">↑</div>
+            <div class="upload-zone-text">
+              <strong>Drop files here</strong> or click to browse
+            </div>
+            <div class="upload-zone-formats">
+              PDF · DOCX · TXT · MD · HTML
+              <span class="file-info-trigger" id="fileInfoTrigger" title="Click for details">ⓘ</span>
+            </div>
+          </div>
+        </div>
+        <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.rtf,.txt,.md,.html,.htm,.xml,.css,.json,.csv,.tsv,.yaml,.yml,.js,.ts,.py,.java,.c,.cpp,.cs,.go,.rb,.php,.swift,.rs,.sql,.sh,.zip" multiple>
+        <div class="file-type-info" id="fileTypeInfo">
+          <div class="file-type-info-header">
+            <strong>Gemini File Search - Supported Formats</strong>
+            <button class="file-info-close" id="fileInfoClose">×</button>
+          </div>
+
+          <div class="file-type-category">
+            <div class="file-type-category-title">📄 Documents</div>
+            <div class="file-type-grid">
+              <div class="file-type-item"><span class="file-type-ext">.pdf</span><span class="file-type-desc">PDF</span></div>
+              <div class="file-type-item"><span class="file-type-ext">.doc</span><span class="file-type-desc">Word (legacy)</span></div>
+              <div class="file-type-item"><span class="file-type-ext">.docx</span><span class="file-type-desc">Word</span></div>
+              <div class="file-type-item"><span class="file-type-ext">.xls</span><span class="file-type-desc">Excel (legacy)</span></div>
+              <div class="file-type-item"><span class="file-type-ext">.xlsx</span><span class="file-type-desc">Excel</span></div>
+              <div class="file-type-item"><span class="file-type-ext">.ppt</span><span class="file-type-desc">PowerPoint (legacy)</span></div>
+              <div class="file-type-item"><span class="file-type-ext">.pptx</span><span class="file-type-desc">PowerPoint</span></div>
+              <div class="file-type-item"><span class="file-type-ext">.odt</span><span class="file-type-desc">OpenDocument</span></div>
+              <div class="file-type-item"><span class="file-type-ext">.rtf</span><span class="file-type-desc">Rich Text</span></div>
+            </div>
+          </div>
+
+          <div class="file-type-category">
+            <div class="file-type-category-title">📝 Text & Markup</div>
+            <div class="file-type-grid">
+              <div class="file-type-item"><span class="file-type-ext">.txt</span><span class="file-type-desc">Plain text</span></div>
+              <div class="file-type-item"><span class="file-type-ext">.md</span><span class="file-type-desc">Markdown</span></div>
+              <div class="file-type-item"><span class="file-type-ext">.html</span><span class="file-type-desc">HTML</span></div>
+              <div class="file-type-item"><span class="file-type-ext">.xml</span><span class="file-type-desc">XML</span></div>
+              <div class="file-type-item"><span class="file-type-ext">.css</span><span class="file-type-desc">CSS</span></div>
+            </div>
+          </div>
+
+          <div class="file-type-category">
+            <div class="file-type-category-title">📊 Data</div>
+            <div class="file-type-grid">
+              <div class="file-type-item"><span class="file-type-ext">.json</span><span class="file-type-desc">JSON</span></div>
+              <div class="file-type-item"><span class="file-type-ext">.csv</span><span class="file-type-desc">CSV</span></div>
+              <div class="file-type-item"><span class="file-type-ext">.tsv</span><span class="file-type-desc">TSV</span></div>
+              <div class="file-type-item"><span class="file-type-ext">.yaml</span><span class="file-type-desc">YAML</span></div>
+            </div>
+          </div>
+
+          <div class="file-type-category">
+            <div class="file-type-category-title">💻 Code (40+ languages supported)</div>
+            <div class="file-type-grid">
+              <div class="file-type-item"><span class="file-type-ext">.js</span><span class="file-type-desc">JavaScript</span></div>
+              <div class="file-type-item"><span class="file-type-ext">.ts</span><span class="file-type-desc">TypeScript</span></div>
+              <div class="file-type-item"><span class="file-type-ext">.py</span><span class="file-type-desc">Python</span></div>
+              <div class="file-type-item"><span class="file-type-ext">.java</span><span class="file-type-desc">Java</span></div>
+              <div class="file-type-item"><span class="file-type-ext">.c/.cpp</span><span class="file-type-desc">C/C++</span></div>
+              <div class="file-type-item"><span class="file-type-ext">.cs</span><span class="file-type-desc">C#</span></div>
+              <div class="file-type-item"><span class="file-type-ext">.go</span><span class="file-type-desc">Go</span></div>
+              <div class="file-type-item"><span class="file-type-ext">.rb</span><span class="file-type-desc">Ruby</span></div>
+              <div class="file-type-item"><span class="file-type-ext">.php</span><span class="file-type-desc">PHP</span></div>
+              <div class="file-type-item"><span class="file-type-ext">.swift</span><span class="file-type-desc">Swift</span></div>
+              <div class="file-type-item"><span class="file-type-ext">.rs</span><span class="file-type-desc">Rust</span></div>
+              <div class="file-type-item"><span class="file-type-ext">.sql</span><span class="file-type-desc">SQL</span></div>
+              <div class="file-type-item"><span class="file-type-ext">.sh</span><span class="file-type-desc">Shell</span></div>
+            </div>
+          </div>
+
+          <div class="file-type-category">
+            <div class="file-type-category-title">📦 Archives</div>
+            <div class="file-type-grid">
+              <div class="file-type-item"><span class="file-type-ext">.zip</span><span class="file-type-desc">ZIP archive</span></div>
+            </div>
+          </div>
+
+          <div class="file-type-note">
+            <strong>Max file size:</strong> 100MB per file<br>
+            <strong>Note:</strong> Gemini File Search supports 32 application types + 155 text types total.<br>
+            <a href="https://ai.google.dev/gemini-api/docs/file-search" target="_blank" rel="noopener" style="color: var(--accent);">Full list in Google docs →</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Documents List -->
+      <div class="section" id="documentsSection" style="display: none;">
+        <div class="section-header">
+          <h2 class="section-title">
+            <span class="icon">📚</span>
+            Your Documents
+            <span class="badge" id="documentsCount">0</span>
+          </h2>
+          <button class="btn btn-ghost" id="refreshBtn" title="Refresh">
+            ↻
+          </button>
+        </div>
+        <div id="documentsListContainer"></div>
+      </div>
+
+      <!-- Activity Log -->
+      <div class="section">
+        <div class="activity-header" id="activityToggle">
+          <span class="activity-toggle-icon">▶</span>
+          <h2 class="section-title">
+            <span class="icon">📋</span>
+            Activity Log
+          </h2>
+          <button class="btn btn-ghost clear-log-btn" id="clearLogBtn" title="Clear activity log">Clear</button>
+        </div>
+        <div class="activity-log" id="activityLog"></div>
+      </div>
+
+      <!-- Settings Panel -->
+      <div class="settings-toggle" id="settingsToggle">
+        ⚙️ Settings
+      </div>
+      <div class="settings-panel" id="settingsPanel">
+        <div class="settings-content">
+          <div class="form-group">
+            <label for="apiKeyInput">Gemini API Key</label>
+            <div class="input-wrapper">
+              <input type="password" id="apiKeyInput" placeholder="Enter your API key">
+              <span class="input-suffix" id="toggleApiKey">Show</span>
+            </div>
+            <div class="help-text">
+              Get your key at <a href="https://aistudio.google.com" target="_blank" rel="noopener">aistudio.google.com</a>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="n8nBaseInput">N8N Webhook Base URL</label>
+            <input type="text" id="n8nBaseInput" placeholder="e.g., https://your-workspace.n8n.cloud/webhook">
+            <div class="help-text">Required unless Direct API Mode is enabled.</div>
+          </div>
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
+              <input type="checkbox" id="directModeToggle" style="width: 18px; height: 18px; accent-color: var(--accent);">
+              <span>Direct API Mode</span>
+              <span style="font-size: 0.75rem; padding: 2px 8px; background: var(--warning-bg); color: var(--warning); border-radius: 4px;">DEMO</span>
+            </label>
+            <div class="help-text">Bypass N8N webhooks and call Gemini API directly. Use when N8N webhooks are unavailable.</div>
+          </div>
+          <div class="form-group">
+            <label>Current Store</label>
+            <div class="current-store-display" id="currentStoreName">—</div>
+          </div>
+          <div class="form-row">
+            <button class="btn btn-primary" id="saveApiKeyBtn">Save API Key</button>
+            <button class="btn btn-secondary" id="createStoreBtn">+ New Store</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Branding Footer -->
+      <div class="branding">
+        <div class="branding-text">
+          <a href="https://mindvalley.com" target="_blank" rel="noopener">MindValley</a>
+          <span class="branding-divider">×</span>
+          <a href="https://aibuildlab.com" target="_blank" rel="noopener">AI Build Lab</a>
+          <span class="branding-divider">×</span>
+          <span>Powered by Gemini</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal -->
+  <div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal" id="modal">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalTitle"></h3>
+        <p class="modal-description" id="modalDescription"></p>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer" id="modalFooter"></div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <span class="toast-icon" id="toastIcon"></span>
+    <div class="toast-message" id="toastMessage"></div>
+  </div>
+
+  <script>
+    // ============================================
+    // THE STACKS - Application Logic
+    // ============================================
+
+    const CONFIG = {
+      BASE_URL: 'https://generativelanguage.googleapis.com/v1beta',
+      UPLOAD_URL: 'https://generativelanguage.googleapis.com/upload/v1beta',
+      MAX_FILE_SIZE: 100 * 1024 * 1024, // 100MB per Gemini File Search docs
+      SUPPORTED_TYPES: {
+        // Documents
+        'pdf': 'application/pdf',
+        'doc': 'application/msword',
+        'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'xls': 'application/vnd.ms-excel',
+        'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'ppt': 'application/vnd.ms-powerpoint',
+        'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'odt': 'application/vnd.oasis.opendocument.text',
+        'rtf': 'text/rtf',
+        // Text & Markup
+        'txt': 'text/plain',
+        'md': 'text/markdown',
+        'html': 'text/html',
+        'htm': 'text/html',
+        'xml': 'text/xml',
+        'css': 'text/css',
+        // Data
+        'json': 'application/json',
+        'csv': 'text/csv',
+        'tsv': 'text/tab-separated-values',
+        'yaml': 'text/yaml',
+        'yml': 'text/yaml',
+        // Code
+        'js': 'text/javascript',
+        'ts': 'text/typescript',
+        'py': 'text/x-python',
+        'java': 'text/x-java-source',
+        'c': 'text/x-c',
+        'cpp': 'text/x-c++',
+        'cs': 'text/x-csharp',
+        'go': 'text/x-go',
+        'rb': 'text/x-ruby',
+        'php': 'text/x-php',
+        'swift': 'text/x-swift',
+        'rs': 'text/x-rust',
+        'sql': 'text/x-sql',
+        'sh': 'text/x-shellscript',
+        // Archives
+        'zip': 'application/zip'
+      }
+    };
+
+    // State
+    let state = {
+      apiKey: localStorage.getItem('gemini_api_key'),
+      n8nBase: localStorage.getItem('n8n_webhook_base') || '',
+      stores: [],
+      currentStore: localStorage.getItem('current_store'),
+      documents: [],
+      activityLog: JSON.parse(localStorage.getItem('activityLog') || '[]'),
+      theme: localStorage.getItem('theme') || 'dark'
+    };
+
+    // DOM Elements
+    const $ = id => document.getElementById(id);
+    const elements = {
+      storeSelect: $('storeSelect'),
+      storeSelectorContainer: $('storeSelectorContainer'),
+      uploadSection: $('uploadSection'),
+      documentsSection: $('documentsSection'),
+      uploadZone: $('uploadZone'),
+      fileInput: $('fileInput'),
+      documentsListContainer: $('documentsListContainer'),
+      documentsCount: $('documentsCount'),
+      refreshBtn: $('refreshBtn'),
+      activityToggle: $('activityToggle'),
+      activityLog: $('activityLog'),
+      settingsToggle: $('settingsToggle'),
+      settingsPanel: $('settingsPanel'),
+      apiKeyInput: $('apiKeyInput'),
+      toggleApiKey: $('toggleApiKey'),
+      saveApiKeyBtn: $('saveApiKeyBtn'),
+      n8nInput: $('n8nBaseInput'),
+      createStoreBtn: $('createStoreBtn'),
+      currentStoreName: $('currentStoreName'),
+      modalBackdrop: $('modalBackdrop'),
+      modalTitle: $('modalTitle'),
+      modalDescription: $('modalDescription'),
+      modalBody: $('modalBody'),
+      modalFooter: $('modalFooter'),
+      toast: $('toast'),
+      toastIcon: $('toastIcon'),
+      toastMessage: $('toastMessage'),
+      themeToggle: $('themeToggle')
+    };
+
+    // ============================================
+    // Theme Management
+    // ============================================
+    function setTheme(theme) {
+      state.theme = theme;
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('theme', theme);
+    }
+
+    function toggleTheme() {
+      setTheme(state.theme === 'dark' ? 'light' : 'dark');
+    }
+
+    function initTheme() {
+      const saved = localStorage.getItem('theme');
+      setTheme(saved || 'dark');
+    }
+
+    // ============================================
+    // Webhook Helpers (N8N) + Direct API Mode
+    // ============================================
+    const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta';
+
+    // Check if Direct API Mode is enabled (bypasses N8N)
+    function isDirectMode() {
+      return localStorage.getItem('direct_api_mode') === 'true';
+    }
+
+    function getWebhookUrl(path) {
+      const base = state.n8nBase?.trim();
+      if (!base) throw new Error('N8N webhook URL not configured');
+      const normalizedBase = base.endsWith('/') ? base.replace(/\/+$/, '') : base;
+      const cleanedPath = path.replace(/^\/+/, '');
+      return `${normalizedBase}/${cleanedPath}`;
+    }
+
+    async function postWebhook(path, payload) {
+      const url = getWebhookUrl(path);
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || `Webhook error (${response.status})`);
+      }
+      const data = await response.json().catch(() => ({}));
+      if (data.error) throw new Error(data.error);
+      return data;
+    }
+
+    // Direct Gemini API calls (bypasses N8N)
+    async function directApiCall(endpoint, options = {}) {
+      const url = `${GEMINI_API_BASE}${endpoint}${endpoint.includes('?') ? '&' : '?'}key=${state.apiKey}`;
+      const response = await fetch(url, {
+        headers: { 'Content-Type': 'application/json' },
+        ...options
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error?.message || `API error (${response.status})`);
+      }
+      return response.json();
+    }
+
+    function ensureConfigured() {
+      if (isDirectMode()) return true; // Direct mode only needs API key
+      if (!state.n8nBase) {
+        showToast('N8N webhook URL not configured', 'error');
+        return false;
+      }
+      return true;
+    }
+
+    // ============================================
+    // API Functions (with Direct Mode support)
+    // ============================================
+    async function fetchStores() {
+      if (!state.apiKey) return [];
+      if (!isDirectMode() && !ensureConfigured()) return [];
+      try {
+        if (isDirectMode()) {
+          // Direct Gemini API call
+          const data = await directApiCall('/corpora');
+          return data.corpora || [];
+        } else {
+          const data = await postWebhook('kb-list-stores', { apiKey: state.apiKey });
+          return data.corpora || [];
+        }
+      } catch (error) {
+        console.error('fetchStores error:', error);
+        showToast(error.message, 'error');
+        return [];
+      }
+    }
+
+    async function fetchDocuments(storeId) {
+      if (!state.apiKey || !storeId) return [];
+      if (!isDirectMode() && !ensureConfigured()) return [];
+      try {
+        if (isDirectMode()) {
+          // Direct Gemini API call
+          const data = await directApiCall(`/${storeId}/documents`);
+          return data.documents || [];
+        } else {
+          const data = await postWebhook('kb-list-documents', { apiKey: state.apiKey, storeId });
+          return data.documents || data.files || [];
+        }
+      } catch (error) {
+        console.error('fetchDocuments error:', error);
+        showToast(error.message, 'error');
+        return [];
+      }
+    }
+
+    async function createStore(name) {
+      if (!state.apiKey) throw new Error('API key required');
+      if (!isDirectMode() && !ensureConfigured()) throw new Error('N8N webhook URL not configured');
+      if (isDirectMode()) {
+        // Direct Gemini API call
+        return await directApiCall('/corpora', {
+          method: 'POST',
+          body: JSON.stringify({ displayName: name })
+        });
+      }
+      return await postWebhook('kb-create-store', { apiKey: state.apiKey, displayName: name });
+    }
+
+    async function uploadFile(file, storeId) {
+      if (!state.apiKey || !storeId) throw new Error('API key and store required');
+      if (!isDirectMode() && !ensureConfigured()) throw new Error('N8N webhook URL not configured');
+      if (file.size > CONFIG.MAX_FILE_SIZE) throw new Error('File exceeds 100MB limit');
+
+      const ext = file.name.split('.').pop().toLowerCase();
+      const mimeType = CONFIG.SUPPORTED_TYPES[ext];
+      if (!mimeType) throw new Error('Unsupported file type');
+
+      if (isDirectMode()) {
+        // Direct Gemini API - resumable upload
+        // Step 1: Start resumable upload
+        const startUrl = `https://generativelanguage.googleapis.com/upload/v1beta/${storeId}/documents?key=${state.apiKey}`;
+        const startRes = await fetch(startUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Goog-Upload-Protocol': 'resumable',
+            'X-Goog-Upload-Command': 'start',
+            'X-Goog-Upload-Header-Content-Type': mimeType
+          },
+          body: JSON.stringify({ displayName: file.name })
+        });
+        if (!startRes.ok) {
+          const err = await startRes.json().catch(() => ({}));
+          throw new Error(err.error?.message || 'Failed to start upload');
+        }
+        const uploadUrl = startRes.headers.get('X-Goog-Upload-URL');
+        if (!uploadUrl) throw new Error('No upload URL returned');
+
+        // Step 2: Upload file content
+        const buffer = await file.arrayBuffer();
+        const uploadRes = await fetch(uploadUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': mimeType,
+            'X-Goog-Upload-Command': 'upload, finalize',
+            'X-Goog-Upload-Offset': '0'
+          },
+          body: buffer
+        });
+        if (!uploadRes.ok) {
+          const err = await uploadRes.json().catch(() => ({}));
+          throw new Error(err.error?.message || 'Failed to upload file');
+        }
+        return await uploadRes.json();
+      }
+
+      // N8N webhook mode
+      const buffer = await file.arrayBuffer();
+      // Convert to base64 in chunks to avoid stack overflow
+      const bytes = new Uint8Array(buffer);
+      let binary = '';
+      const chunkSize = 8192;
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+      }
+      const base64 = btoa(binary);
+      return await postWebhook('kb-upload', {
+        apiKey: state.apiKey,
+        storeId,
+        fileName: file.name,
+        mimeType,
+        content: base64
+      });
+    }
+
+    async function deleteDocument(documentName) {
+      if (!state.apiKey) throw new Error('API key required');
+      if (!isDirectMode() && !ensureConfigured()) throw new Error('N8N webhook URL not configured');
+      if (isDirectMode()) {
+        // Direct Gemini API call
+        return await directApiCall(`/${documentName}`, { method: 'DELETE' });
+      }
+      return await postWebhook('kb-delete-document', {
+        apiKey: state.apiKey,
+        documentId: documentName,
+        storeId: state.currentStore
+      });
+    }
+
+    // ============================================
+    // UI Functions
+    // ============================================
+    function showToast(message, type = 'success') {
+      const icons = { success: '✓', error: '✕', warning: '!' };
+      elements.toastIcon.textContent = icons[type] || icons.success;
+      elements.toastMessage.textContent = message;
+      elements.toast.className = `toast ${type}`;
+      setTimeout(() => elements.toast.classList.add('active'), 10);
+      setTimeout(() => elements.toast.classList.remove('active'), 4000);
+    }
+
+    function addToLog(icon, message) {
+      const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      const date = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      state.activityLog.unshift({ time, date, icon, message });
+      if (state.activityLog.length > 50) state.activityLog = state.activityLog.slice(0, 50);
+      localStorage.setItem('activityLog', JSON.stringify(state.activityLog));
+      renderActivityLog();
+    }
+
+    function renderActivityLog() {
+      // Re-hydrate from storage in case entries were persisted separately
+      try {
+        state.activityLog = JSON.parse(localStorage.getItem('activityLog') || '[]');
+      } catch {
+        state.activityLog = [];
+      }
+      if (state.activityLog.length === 0) {
+        elements.activityLog.innerHTML = '<div class="empty-state"><div class="empty-state-text">No activity yet</div></div>';
+        return;
+      }
+      const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      elements.activityLog.innerHTML = state.activityLog.map(item => {
+        const showDate = item.date && item.date !== today;
+        return `
+          <div class="activity-item">
+            <span class="activity-icon">${item.icon}</span>
+            <span class="activity-time">${item.time}${showDate ? `<span class="activity-date">${item.date}</span>` : ''}</span>
+            <span class="activity-message">${item.message}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function clearActivityLog() {
+      state.activityLog = [];
+      localStorage.removeItem('activityLog');
+      renderActivityLog();
+      showToast('Activity log cleared', 'success');
+    }
+
+    function showModal(config) {
+      elements.modalTitle.textContent = config.title || '';
+      elements.modalDescription.textContent = config.description || '';
+      elements.modalBody.innerHTML = config.body || '';
+      elements.modalFooter.innerHTML = config.footer || '';
+      elements.modalBackdrop.classList.add('active');
+    }
+
+    function hideModal() {
+      elements.modalBackdrop.classList.remove('active');
+    }
+
+    function showLoading(container) {
+      const overlay = document.createElement('div');
+      overlay.className = 'loading-overlay';
+      overlay.innerHTML = '<div class="spinner"></div>';
+      container.appendChild(overlay);
+    }
+
+    function hideLoading(container) {
+      const overlay = container.querySelector('.loading-overlay');
+      if (overlay) overlay.remove();
+    }
+
+    function renderStores() {
+      if (state.stores.length === 0) {
+        elements.storeSelectorContainer.style.display = 'none';
+        return;
+      }
+      elements.storeSelectorContainer.style.display = 'flex';
+      elements.storeSelect.innerHTML = state.stores.map(store =>
+        `<option value="${store.name}" ${store.name === state.currentStore ? 'selected' : ''}>${store.displayName}</option>`
+      ).join('');
+      const currentStoreObj = state.stores.find(s => s.name === state.currentStore);
+      elements.currentStoreName.textContent = currentStoreObj ? currentStoreObj.displayName : '—';
+    }
+
+    function renderDocuments() {
+      elements.documentsCount.textContent = state.documents.length;
+      if (state.documents.length === 0) {
+        elements.documentsListContainer.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">📄</div>
+            <div class="empty-state-text">No documents yet. Upload your first file to get started.</div>
+          </div>
+        `;
+        return;
+      }
+      elements.documentsListContainer.innerHTML = `
+        <div class="documents-list">
+          ${state.documents.map(doc => {
+            const fileName = doc.displayName || 'Untitled';
+            const ext = fileName.split('.').pop().toLowerCase();
+            return `
+              <div class="document-row">
+                <div class="document-name" title="${fileName}">${fileName}</div>
+                <div class="document-type">${ext}</div>
+                <div class="document-status">Active</div>
+                <button class="btn btn-danger" onclick="handleDeleteClick('${doc.name}')" title="Delete">🗑</button>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    function showWelcomeModal() {
+      showModal({
+        title: 'Welcome to The Stacks',
+        description: 'Your knowledge base manager powered by Gemini',
+        body: `
+          <div class="form-group">
+            <label for="welcomeApiKey">Gemini API Key</label>
+            <input type="password" id="welcomeApiKey" placeholder="Paste your API key">
+            <div class="help-text">Get your key at <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a></div>
+          </div>
+        `,
+        footer: `<button class="btn btn-primary" onclick="handleWelcomeConnect()">Connect →</button>`
+      });
+      setTimeout(() => document.getElementById('welcomeApiKey')?.focus(), 100);
+    }
+
+    function showCreateStoreModal() {
+      showModal({
+        title: 'Create Knowledge Base',
+        description: 'Give your new store a name',
+        body: `
+          <div class="form-group">
+            <label for="newStoreName">Store Name</label>
+            <input type="text" id="newStoreName" placeholder="e.g., Product Documentation">
+          </div>
+        `,
+        footer: `
+          <button class="btn btn-secondary" onclick="hideModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="handleCreateStore()">Create</button>
+        `
+      });
+      setTimeout(() => document.getElementById('newStoreName')?.focus(), 100);
+    }
+
+    function showDeleteConfirmModal(documentName, fileName) {
+      showModal({
+        title: 'Delete Document',
+        description: 'This action cannot be undone',
+        body: `<p style="color: var(--text-secondary);">Are you sure you want to delete <strong style="color: var(--text-primary);">${fileName}</strong>?</p>`,
+        footer: `
+          <button class="btn btn-secondary" onclick="hideModal()">Cancel</button>
+          <button class="btn btn-primary" style="background: var(--error);" onclick="handleDeleteConfirm('${documentName}', '${fileName}')">Delete</button>
+        `
+      });
+    }
+
+    // ============================================
+    // Event Handlers
+    // ============================================
+    async function handleWelcomeConnect() {
+      const input = document.getElementById('welcomeApiKey');
+      const apiKey = input.value.trim();
+      if (!apiKey) { showToast('Please enter an API key', 'error'); return; }
+
+      state.apiKey = apiKey;
+      localStorage.setItem('gemini_api_key', apiKey);
+      elements.apiKeyInput.value = apiKey;
+      hideModal();
+      addToLog('🔑', 'API key saved, connecting...');
+      await loadStores();
+    }
+
+    async function loadStores() {
+      if (!ensureConfigured()) return;
+      addToLog('↻', 'Loading stores...');
+      const stores = await fetchStores();
+      state.stores = stores;
+
+      if (stores.length === 0) {
+        addToLog('📝', 'No stores found');
+        showToast('No stores found. Create your first one!', 'warning');
+        showCreateStoreModal();
+        return;
+      }
+
+      if (!state.currentStore || !stores.find(s => s.name === state.currentStore)) {
+        state.currentStore = stores[0].name;
+        localStorage.setItem('current_store', state.currentStore);
+      }
+
+      renderStores();
+      addToLog('✓', `Loaded ${stores.length} store(s)`);
+      elements.uploadSection.style.display = 'block';
+      elements.documentsSection.style.display = 'block';
+      await loadDocuments();
+    }
+
+    async function loadDocuments() {
+      if (!state.currentStore) return;
+      addToLog('↻', 'Loading documents...');
+      showLoading(elements.documentsSection);
+      const docs = await fetchDocuments(state.currentStore);
+      state.documents = docs;
+      hideLoading(elements.documentsSection);
+      renderDocuments();
+      addToLog('✓', `Loaded ${docs.length} document(s)`);
+    }
+
+    async function handleCreateStore() {
+      const input = document.getElementById('newStoreName');
+      const name = input.value.trim();
+      if (!name) { showToast('Please enter a name', 'error'); return; }
+
+      try {
+        hideModal();
+        addToLog('↻', `Creating store: ${name}...`);
+        const newStore = await createStore(name);
+        state.stores.push(newStore);
+        state.currentStore = newStore.name;
+        localStorage.setItem('current_store', state.currentStore);
+        renderStores();
+        addToLog('✓', `Created: ${name}`);
+        showToast(`Store "${name}" created!`, 'success');
+        elements.uploadSection.style.display = 'block';
+        elements.documentsSection.style.display = 'block';
+        await loadDocuments();
+      } catch (error) {
+        addToLog('✕', `Failed: ${error.message}`);
+        showToast(error.message, 'error');
+      }
+    }
+
+    async function handleFilesSelected(files) {
+      if (!state.currentStore) { showToast('Select a store first', 'error'); return; }
+      for (const file of Array.from(files)) {
+        try {
+          addToLog('↑', `Uploading ${file.name}...`);
+          await uploadFile(file, state.currentStore);
+          addToLog('✓', `Uploaded ${file.name}`);
+          showToast(`Uploaded ${file.name}`, 'success');
+        } catch (error) {
+          addToLog('✕', `Failed: ${file.name}`);
+          showToast(`Failed: ${error.message}`, 'error');
+        }
+      }
+      await loadDocuments();
+    }
+
+    function handleDeleteClick(documentName) {
+      const doc = state.documents.find(d => d.name === documentName);
+      showDeleteConfirmModal(documentName, doc?.displayName || 'this document');
+    }
+
+    async function handleDeleteConfirm(documentName, fileName) {
+      hideModal();
+      try {
+        addToLog('🗑', `Deleting ${fileName}...`);
+        await deleteDocument(documentName);
+        addToLog('✓', `Deleted ${fileName}`);
+        showToast(`Deleted ${fileName}`, 'success');
+        await loadDocuments();
+      } catch (error) {
+        addToLog('✕', `Failed: ${error.message}`);
+        showToast(error.message, 'error');
+      }
+    }
+
+    // ============================================
+    // Event Listeners
+    // ============================================
+    elements.uploadZone.addEventListener('click', () => elements.fileInput.click());
+
+    elements.uploadZone.addEventListener('dragover', e => {
+      e.preventDefault();
+      elements.uploadZone.classList.add('dragover');
+    });
+
+    elements.uploadZone.addEventListener('dragleave', () => {
+      elements.uploadZone.classList.remove('dragover');
+    });
+
+    elements.uploadZone.addEventListener('drop', e => {
+      e.preventDefault();
+      elements.uploadZone.classList.remove('dragover');
+      handleFilesSelected(e.dataTransfer.files);
+    });
+
+    elements.fileInput.addEventListener('change', e => {
+      if (e.target.files.length > 0) {
+        handleFilesSelected(e.target.files);
+        e.target.value = '';
+      }
+    });
+
+    elements.refreshBtn.addEventListener('click', loadDocuments);
+
+    elements.storeSelect.addEventListener('change', async e => {
+      state.currentStore = e.target.value;
+      localStorage.setItem('current_store', state.currentStore);
+      const store = state.stores.find(s => s.name === state.currentStore);
+      elements.currentStoreName.textContent = store?.displayName || '—';
+      addToLog('↻', `Switched to ${store?.displayName}`);
+      await loadDocuments();
+    });
+
+    elements.activityToggle.addEventListener('click', () => {
+      elements.activityToggle.classList.toggle('expanded');
+      elements.activityLog.classList.toggle('expanded');
+    });
+
+    elements.settingsToggle.addEventListener('click', () => {
+      elements.settingsPanel.classList.toggle('expanded');
+    });
+
+    elements.toggleApiKey.addEventListener('click', () => {
+      const input = elements.apiKeyInput;
+      if (input.type === 'password') {
+        input.type = 'text';
+        elements.toggleApiKey.textContent = 'Hide';
+      } else {
+        input.type = 'password';
+        elements.toggleApiKey.textContent = 'Show';
+      }
+    });
+
+    // Direct Mode Toggle
+    const directModeToggle = $('directModeToggle');
+    directModeToggle.checked = localStorage.getItem('direct_api_mode') === 'true';
+    directModeToggle.addEventListener('change', () => {
+      localStorage.setItem('direct_api_mode', directModeToggle.checked);
+      if (directModeToggle.checked) {
+        showToast('Direct API Mode enabled - bypassing N8N', 'warning');
+        addToLog('⚡', 'Direct API Mode enabled');
+      } else {
+        showToast('Using N8N webhooks', 'success');
+        addToLog('🔗', 'N8N webhook mode enabled');
+      }
+    });
+
+    elements.saveApiKeyBtn.addEventListener('click', async () => {
+      const newApiKey = elements.apiKeyInput.value.trim();
+      if (!newApiKey) { showToast('Please enter an API key', 'error'); return; }
+      const newN8nBase = elements.n8nInput.value.trim();
+      state.apiKey = newApiKey;
+      state.n8nBase = newN8nBase;
+      localStorage.setItem('gemini_api_key', newApiKey);
+      localStorage.setItem('n8n_webhook_base', newN8nBase);
+      addToLog('✓', 'API key updated');
+      showToast('Settings saved', 'success');
+      await loadStores();
+    });
+
+    elements.createStoreBtn.addEventListener('click', showCreateStoreModal);
+
+    elements.modalBackdrop.addEventListener('click', e => {
+      if (e.target === elements.modalBackdrop) hideModal();
+    });
+
+    elements.themeToggle.addEventListener('click', toggleTheme);
+
+    // File type info panel toggle
+    const fileInfoTrigger = $('fileInfoTrigger');
+    const fileTypeInfo = $('fileTypeInfo');
+    const fileInfoClose = $('fileInfoClose');
+
+    fileInfoTrigger.addEventListener('click', e => {
+      e.stopPropagation();
+      fileTypeInfo.classList.toggle('active');
+    });
+
+    fileInfoClose.addEventListener('click', e => {
+      e.stopPropagation();
+      fileTypeInfo.classList.remove('active');
+    });
+
+    // Clear activity log
+    $('clearLogBtn').addEventListener('click', e => {
+      e.stopPropagation();
+      clearActivityLog();
+    });
+
+    // Global functions for onclick handlers
+    window.handleWelcomeConnect = handleWelcomeConnect;
+    window.handleCreateStore = handleCreateStore;
+    window.handleDeleteClick = handleDeleteClick;
+    window.handleDeleteConfirm = handleDeleteConfirm;
+    window.hideModal = hideModal;
+
+    // ============================================
+    // Initialize
+    // ============================================
+    async function init() {
+      initTheme();
+      renderActivityLog();
+      elements.apiKeyInput.value = state.apiKey || '';
+      elements.n8nInput.value = state.n8nBase || '';
+      if (state.apiKey) {
+        await loadStores();
+      } else {
+        showWelcomeModal();
+      }
+
+      addToLog('✓', 'The Stacks initialized');
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

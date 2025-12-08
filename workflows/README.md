@@ -21,39 +21,16 @@ This folder contains all the N8N workflow JSONs you'll use throughout the course
 | File | Purpose | Session |
 |------|---------|---------|
 | `gemini-ingestion-engine-v2-2025-11-27.json` | Ingest documents into Gemini File Search | 1 |
-| `03-echo-trigger-v2-2025-12-08.json` | Echo Brand Voice - Form trigger (instant response) | 1-2 |
-| `02-echo-processor-v2-2025-12-08.json` | Echo Brand Voice - Background processor (email delivery) | 1-2 |
+| `echo-trigger-v2-2025-12-08.json` | Echo Brand Voice - Form trigger (instant response) | 1-2 |
+| `echo-processor-v2-2025-12-08.json` | Echo Brand Voice - Background processor (40+ nodes, email delivery) | 1-2 |
 | `email-filter-v1-2025-11-27.json` | Classify incoming emails | 2 |
 | `librarian-tool-v1-2025-11-27.json` | Search knowledge base | 2 |
 
-> **IMPORTANT: Echo Two-Workflow Architecture**
+> **Note on Echo Workflows:** Echo uses a two-workflow "fire-and-forget" architecture:
+> - **Echo Trigger**: Handles form submission, responds instantly, fires processor
+> - **Echo Processor**: Runs 14-step analysis in background, emails results (5-10 min)
 >
-> Echo uses a "fire-and-forget" design to avoid N8N timeouts:
-> - **Echo Trigger** (03-*): Handles form submission, responds instantly (<1 sec), fires Processor
-> - **Echo Processor** (02-*): Runs 14-step analysis in background, emails results (5-10 min)
->
-> **Import Order:**
-> 1. Import **Processor** first (02-echo-processor)
-> 2. Import **Trigger** second (03-echo-trigger)
-> 3. In Trigger workflow, update "Execute Processor" node to point to your Processor workflow ID
-> 4. Configure Gmail OAuth in Processor's "Send Results Email" node
-> 5. Add your Anthropic API key in Processor's "Configuration" node
->
-> **What Each Workflow Contains:**
-> - **Trigger** (4 nodes): Form > Capture Input > Respond Immediately > Execute Processor
-> - **Processor** (43 nodes): Called by Trigger > 14 Analysis Steps > XML Generation > Email Delivery
->
-> **Expected Behavior:**
-> 1. Student fills Echo form at your N8N form URL
-> 2. Form returns success page instantly
-> 3. 5-10 minutes later, student receives email with 2 attachments:
->    - `brand-voice.xml` - Ready to paste into AI agent system prompt
->    - `full-analysis.md` - Upload to knowledge base for RAG
->
-> **Troubleshooting:**
-> - If students report "only 3 nodes", they imported an old stub. Point them to the new 2025-12-08 versions.
-> - If no email arrives, check Gmail OAuth credentials in Processor workflow.
-> - Form URL is at the Trigger workflow's Form node (webhook path: `/form/echo-form`)
+> After importing, update the Trigger's "Execute Workflow" node to point to your Processor workflow ID.
 
 ### KB Management (Gemini File Search)
 | File | Purpose | Session |
@@ -75,8 +52,10 @@ This folder contains all the N8N workflow JSONs you'll use throughout the course
 | File | Purpose | Session |
 |------|---------|---------|
 | `w1-email-processing-pipeline-v1-2025-11-28.json` | Main email processing pipeline | 3 |
-| `w2-approval-handler-v1-2025-11-28.json` | Handle Slack approvals | 3 |
+| `w2-approval-handler-v1-2025-12-08.json` | Handle Slack approvals | 3 |
 | `sub-revision-processor-v1-2025-11-28.json` | Process revision requests | 3 |
+
+> **W2 Credentials:** The W2 Approval Handler requires Slack API, OpenAI API, Google Sheets OAuth2, and Gmail OAuth2. See [docs/w2-credential-setup.md](../docs/w2-credential-setup.md) for setup instructions.
 
 ## Naming Convention
 

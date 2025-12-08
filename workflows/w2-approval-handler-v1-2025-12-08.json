@@ -1,0 +1,357 @@
+{
+  "name": "W2: Approval Handler - Hattie B's HITL",
+  "nodes": [
+    {
+      "id": "trigger-slack",
+      "name": "Slack Trigger",
+      "type": "n8n-nodes-base.slackTrigger",
+      "typeVersion": 1,
+      "position": [0, 300],
+      "parameters": {}
+    },
+    {
+      "id": "settings-node",
+      "name": "Settings",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [220, 300],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {"id": "settings-demo-mode", "name": "DEMO_MODE", "value": true, "type": "boolean"},
+            {"id": "settings-slack-channel", "name": "SLACK_CHANNEL", "value": "#customer-service-approvals", "type": "string"},
+            {"id": "settings-sheet-id", "name": "SHEET_ID", "value": "1xTng5h4vCWzFRtEvs05FX1lwguB6Mob-2G_LTgicn4I", "type": "string"},
+            {"id": "settings-reviewer", "name": "REVIEWER_NAME", "value": "Tyler", "type": "string"},
+            {"id": "settings-business", "name": "BUSINESS_NAME", "value": "Hattie B's Hot Chicken", "type": "string"}
+          ]
+        }
+      }
+    },
+    {
+      "id": "filter-bots",
+      "name": "Filter Bot Messages",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [440, 300],
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict"},
+          "conditions": [
+            {"id": "filter-bot-messages", "leftValue": "={{ $json.event.bot_id }}", "rightValue": "", "operator": {"type": "string", "operation": "empty", "singleValue": true}}
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "fetch-thread",
+      "name": "Fetch Thread History",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [660, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/conversations.replies",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackApi",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "Content-Type", "value": "application/x-www-form-urlencoded"}]},
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {"parameters": [{"name": "channel", "value": "={{ $json.event.channel }}"}, {"name": "ts", "value": "={{ $json.event.thread_ts || $json.event.ts }}"}, {"name": "limit", "value": "20"}]},
+        "options": {}
+      }
+    },
+    {
+      "id": "extract-context",
+      "name": "Extract Thread Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, 200],
+      "parameters": {
+        "jsCode": "const messages = $input.first().json.messages || [];\nconst humanMessage = $('Slack Trigger').first().json.event.text;\nlet executionId = null;\nlet originalBriefing = null;\nfor (const msg of messages) {\n  if (msg.text && msg.text.includes('HOLLER SITREP')) {\n    originalBriefing = msg.text;\n    const idMatch = msg.text.match(/Execution ID:\\\\s*([a-zA-Z0-9-]+)/);\n    if (idMatch) { executionId = idMatch[1]; }\n    break;\n  }\n}\nconst conversationContext = messages.filter(m => !m.bot_id).map(m => m.text).join('\\n');\nreturn [{\n  json: {\n    execution_id: executionId,\n    human_message: humanMessage,\n    conversation_context: conversationContext,\n    original_briefing: originalBriefing,\n    thread_ts: $('Slack Trigger').first().json.event.thread_ts || $('Slack Trigger').first().json.event.ts,\n    channel: $('Slack Trigger').first().json.event.channel\n  }\n}];"
+      }
+    },
+    {
+      "id": "intent-classifier",
+      "name": "Intent Classifier",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [1100, 200],
+      "parameters": {
+        "promptType": "define",
+        "text": "Analyze this message from a human reviewer who is approving email drafts.\n\nThe reviewer's message:\n\"{{ $json.human_message }}\"\n\nConversation context (if any previous messages):\n{{ $json.conversation_context }}\n\n---\n\nDetermine their intent. They may speak casually like they're talking to a colleague.\n\nExamples of SHIP intent:\n- \"ship it\", \"looks good, send it\", \"approved\", \"yep, that works\", \"go ahead\", \"send\", \"fire away\", \"let it fly\"\n\nExamples of REVISE intent:\n- \"needs work\", \"change the tone\", \"too formal\", \"make it friendlier\", \"try again\", \"not quite right\"\n\nExamples of CONFIRM intent:\n- \"thanks\", \"got it\", \"confirmed\", \"perfect\", \"acknowledged\"\n\nOutput ONLY one word: ship, revise, or confirm\n\nIntent:",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an intent classifier for a customer service approval workflow. Your job is to understand what the human reviewer wants to do with an email draft.\n\nYou must output exactly ONE word:\n- ship - if they want to approve and send the email\n- revise - if they want changes made to the draft\n- confirm - if they are acknowledging a completed action\n\nThe reviewer speaks casually, like texting a coworker. Interpret their natural language into these three categories.\n\nIMPORTANT: Only output the intent word. No punctuation, no explanation."
+        }
+      }
+    },
+    {
+      "id": "openai-intent",
+      "name": "OpenAI Intent Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [1100, 420],
+      "parameters": {"model": "gpt-4o", "options": {"temperature": 0}}
+    },
+    {
+      "id": "auto-fixing-parser",
+      "name": "Auto-Fixing Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserAutofixing",
+      "typeVersion": 1,
+      "position": [1300, 420],
+      "parameters": {"options": {}}
+    },
+    {
+      "id": "normalize-intent",
+      "name": "Normalize Intent",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1320, 200],
+      "parameters": {
+        "jsCode": "const rawOutput = $input.first().json.output || $input.first().json.text || '';\nconst normalized = rawOutput.toLowerCase().trim();\nlet intent;\nif (normalized.includes('ship')) { intent = 'ship'; }\nelse if (normalized.includes('revise')) { intent = 'revise'; }\nelse if (normalized.includes('confirm')) { intent = 'confirm'; }\nelse { intent = 'confirm'; }\nreturn [{\n  json: {\n    intent: intent,\n    execution_id: $('Extract Thread Context').first().json.execution_id,\n    human_message: $('Extract Thread Context').first().json.human_message,\n    thread_ts: $('Extract Thread Context').first().json.thread_ts,\n    channel: $('Extract Thread Context').first().json.channel,\n    DEMO_MODE: $('Settings').first().json.DEMO_MODE,\n    SHEET_ID: $('Settings').first().json.SHEET_ID,\n    REVIEWER_NAME: $('Settings').first().json.REVIEWER_NAME\n  }\n}];"
+      }
+    },
+    {
+      "id": "route-intent",
+      "name": "Route by Intent",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [1540, 200],
+      "parameters": {
+        "rules": {"rules": [{"value": "ship", "outputKey": "ship"}, {"value": "revise", "outputKey": "revise"}, {"value": "confirm", "outputKey": "confirm"}]},
+        "options": {},
+        "dataType": "string",
+        "value": "={{ $json.intent }}"
+      }
+    },
+    {
+      "id": "retrieve-draft-ship",
+      "name": "Retrieve Draft (SHIP)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [1800, 0],
+      "parameters": {
+        "operation": "read",
+        "documentId": {"__rl": true, "value": "={{ $json.SHEET_ID }}", "mode": "id"},
+        "sheetName": {"__rl": true, "value": "Email Drafts", "mode": "name"},
+        "filtersUI": {"values": [{"lookupColumn": "execution_id", "lookupValue": "={{ $json.execution_id }}"}]},
+        "options": {}
+      }
+    },
+    {
+      "id": "demo-mode-check",
+      "name": "Demo Mode?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2020, 0],
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict"},
+          "conditions": [{"id": "check-demo-mode", "leftValue": "={{ $('Settings').first().json.DEMO_MODE }}", "rightValue": false, "operator": {"type": "boolean", "operation": "equals"}}],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "gmail-send",
+      "name": "Gmail Send",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [2240, -100],
+      "parameters": {
+        "operation": "send",
+        "sendTo": "={{ $('Retrieve Draft (SHIP)').first().json.customer_email }}",
+        "subject": "={{ $('Retrieve Draft (SHIP)').first().json.draft_subject }}",
+        "emailType": "text",
+        "message": "={{ $('Retrieve Draft (SHIP)').first().json.draft_body }}",
+        "options": {"threadId": "={{ $('Retrieve Draft (SHIP)').first().json.gmail_thread_id }}"}
+      }
+    },
+    {
+      "id": "demo-log-send",
+      "name": "Demo Log (Would Send)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2240, 100],
+      "parameters": {
+        "jsCode": "const draftData = $('Retrieve Draft (SHIP)').first().json;\nconsole.log('=== DEMO MODE: Email would be sent ===');\nconsole.log('To:', draftData.customer_email);\nconsole.log('Subject:', draftData.draft_subject);\nreturn [{\n  json: {\n    demo_mode: true,\n    action: 'email_send_simulated',\n    to: draftData.customer_email,\n    subject: draftData.draft_subject,\n    body_preview: (draftData.draft_body || '').substring(0, 200) + '...'\n  }\n}];"
+      }
+    },
+    {
+      "id": "update-status-sent",
+      "name": "Update Status (Sent)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [2460, 0],
+      "parameters": {
+        "operation": "update",
+        "documentId": {"__rl": true, "value": "={{ $('Settings').first().json.SHEET_ID }}", "mode": "id"},
+        "sheetName": {"__rl": true, "value": "Email Drafts", "mode": "name"},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {"status": "sent", "sent_at": "={{ $now.toISO() }}", "updated_at": "={{ $now.toISO() }}"},
+          "matchingColumns": ["execution_id"],
+          "schema": [
+            {"id": "execution_id", "displayName": "execution_id", "required": false, "defaultMatch": true, "display": true, "type": "string", "canBeUsedToMatch": true}
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "confirm-ship",
+      "name": "Confirm (SHIP)",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [2680, 0],
+      "parameters": {
+        "operation": "post",
+        "channel": "={{ $('Normalize Intent').first().json.channel }}",
+        "text": "={{ $('Settings').first().json.DEMO_MODE ? '📧 [DEMO] Email logged as sent!' : '📧 Email sent!' }} ✅\n\nCustomer: {{ $('Retrieve Draft (SHIP)').first().json.customer_email }}\nSubject: \"{{ $('Retrieve Draft (SHIP)').first().json.draft_subject }}\"\n\n{{ $('Settings').first().json.DEMO_MODE ? '(DEMO_MODE is ON - no actual email was sent)' : 'The email is now in their inbox!' }}",
+        "otherOptions": {"includeLinkToWorkflow": false, "thread_ts": "={{ $('Normalize Intent').first().json.thread_ts }}"}
+      }
+    },
+    {
+      "id": "retrieve-draft-revise",
+      "name": "Retrieve Draft (REVISE)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [1800, 200],
+      "parameters": {
+        "operation": "read",
+        "documentId": {"__rl": true, "value": "={{ $json.SHEET_ID }}", "mode": "id"},
+        "sheetName": {"__rl": true, "value": "Email Drafts", "mode": "name"},
+        "filtersUI": {"values": [{"lookupColumn": "execution_id", "lookupValue": "={{ $json.execution_id }}"}]},
+        "options": {}
+      }
+    },
+    {
+      "id": "call-revision",
+      "name": "Call Revision Sub-Workflow",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [2020, 200],
+      "parameters": {"workflowId": {"__rl": true, "value": "SElCzAg6yvRghOSP", "mode": "id"}}
+    },
+    {
+      "id": "update-revised-draft",
+      "name": "Update Revised Draft",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [2240, 200],
+      "parameters": {
+        "operation": "update",
+        "documentId": {"__rl": true, "value": "={{ $('Settings').first().json.SHEET_ID }}", "mode": "id"},
+        "sheetName": {"__rl": true, "value": "Email Drafts", "mode": "name"},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {"draft_body": "={{ $json.revised_draft.body }}", "draft_subject": "={{ $json.revised_draft.subject }}", "qa_score": "={{ $json.bishop_score }}", "qa_status": "={{ $json.bishop_status }}", "revision_count": "={{ $json.revision_count }}", "status": "pending", "updated_at": "={{ $now.toISO() }}"},
+          "matchingColumns": ["execution_id"],
+          "schema": [{"id": "execution_id", "displayName": "execution_id", "required": false, "defaultMatch": true, "display": true, "type": "string", "canBeUsedToMatch": true}]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "post-revised-draft",
+      "name": "Post Revised Draft",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [2460, 200],
+      "parameters": {
+        "operation": "post",
+        "channel": "={{ $('Normalize Intent').first().json.channel }}",
+        "text": "=🔄 **REVISED DRAFT** (v{{ $json.revision_count }})\n\nBased on your feedback: \"{{ $('Normalize Intent').first().json.human_message }}\"\n\n---\n\n**Subject:** {{ $json.revised_draft.subject }}\n\n{{ $json.revised_draft.body }}\n\n---\n\n👔 Bishop scored this: {{ $json.bishop_score }}/100 ({{ $json.bishop_status }})\n\n_Reply with \"ship it\" to send, or give more feedback to revise again._",
+        "otherOptions": {"includeLinkToWorkflow": false, "thread_ts": "={{ $('Normalize Intent').first().json.thread_ts }}"}
+      }
+    },
+    {
+      "id": "update-status-confirmed",
+      "name": "Update Status (Confirmed)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [1800, 400],
+      "parameters": {
+        "operation": "update",
+        "documentId": {"__rl": true, "value": "={{ $('Settings').first().json.SHEET_ID }}", "mode": "id"},
+        "sheetName": {"__rl": true, "value": "Email Drafts", "mode": "name"},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {"status": "confirmed", "updated_at": "={{ $now.toISO() }}"},
+          "matchingColumns": ["execution_id"],
+          "schema": [{"id": "execution_id", "displayName": "execution_id", "required": false, "defaultMatch": true, "display": true, "type": "string", "canBeUsedToMatch": true}]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "confirm-acknowledge",
+      "name": "Acknowledge (CONFIRM)",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [2020, 400],
+      "parameters": {
+        "operation": "post",
+        "channel": "={{ $json.channel }}",
+        "text": "👍 Noted! This one's wrapped up.",
+        "otherOptions": {"includeLinkToWorkflow": false, "thread_ts": "={{ $json.thread_ts }}"}
+      }
+    },
+    {
+      "id": "gmail-tag-approved",
+      "name": "Tag: Approved by Human",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [2130, -100],
+      "parameters": {"resource": "message", "operation": "addLabels", "messageId": "={{ $('Retrieve Draft (SHIP)').first().json.gmail_message_id }}", "labelIds": ["hattieb/approved-by-human"]}
+    },
+    {
+      "id": "gmail-tag-sent",
+      "name": "Tag: Sent",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [2350, -100],
+      "parameters": {"resource": "message", "operation": "addLabels", "messageId": "={{ $('Retrieve Draft (SHIP)').first().json.gmail_message_id }}", "labelIds": ["hattieb/sent"]}
+    },
+    {
+      "id": "gmail-tag-rejected",
+      "name": "Tag: Rejected by Human",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [1910, 200],
+      "parameters": {"resource": "message", "operation": "addLabels", "messageId": "={{ $json.gmail_message_id }}", "labelIds": ["hattieb/rejected-by-human"]}
+    }
+  ],
+  "connections": {
+    "Slack Trigger": {"main": [[{"node": "Settings", "type": "main", "index": 0}]]},
+    "Settings": {"main": [[{"node": "Filter Bot Messages", "type": "main", "index": 0}]]},
+    "Filter Bot Messages": {"main": [[{"node": "Fetch Thread History", "type": "main", "index": 0}], []]},
+    "Fetch Thread History": {"main": [[{"node": "Extract Thread Context", "type": "main", "index": 0}]]},
+    "Extract Thread Context": {"main": [[{"node": "Intent Classifier", "type": "main", "index": 0}]]},
+    "Intent Classifier": {"main": [[{"node": "Normalize Intent", "type": "main", "index": 0}]]},
+    "OpenAI Intent Model": {"ai_languageModel": [[{"node": "Intent Classifier", "type": "ai_languageModel", "index": 0}]]},
+    "Auto-Fixing Parser": {"ai_outputParser": [[{"node": "Intent Classifier", "type": "ai_outputParser", "index": 0}]]},
+    "Normalize Intent": {"main": [[{"node": "Route by Intent", "type": "main", "index": 0}]]},
+    "Route by Intent": {"main": [[{"node": "Retrieve Draft (SHIP)", "type": "main", "index": 0}], [{"node": "Retrieve Draft (REVISE)", "type": "main", "index": 0}], [{"node": "Update Status (Confirmed)", "type": "main", "index": 0}]]},
+    "Retrieve Draft (SHIP)": {"main": [[{"node": "Demo Mode?", "type": "main", "index": 0}]]},
+    "Demo Mode?": {"main": [[{"node": "Tag: Approved by Human", "type": "main", "index": 0}], [{"node": "Demo Log (Would Send)", "type": "main", "index": 0}]]},
+    "Gmail Send": {"main": [[{"node": "Tag: Sent", "type": "main", "index": 0}]]},
+    "Demo Log (Would Send)": {"main": [[{"node": "Update Status (Sent)", "type": "main", "index": 0}]]},
+    "Update Status (Sent)": {"main": [[{"node": "Confirm (SHIP)", "type": "main", "index": 0}]]},
+    "Retrieve Draft (REVISE)": {"main": [[{"node": "Tag: Rejected by Human", "type": "main", "index": 0}]]},
+    "Call Revision Sub-Workflow": {"main": [[{"node": "Update Revised Draft", "type": "main", "index": 0}]]},
+    "Update Revised Draft": {"main": [[{"node": "Post Revised Draft", "type": "main", "index": 0}]]},
+    "Update Status (Confirmed)": {"main": [[{"node": "Acknowledge (CONFIRM)", "type": "main", "index": 0}]]},
+    "Tag: Approved by Human": {"main": [[{"node": "Gmail Send", "type": "main", "index": 0}]]},
+    "Tag: Sent": {"main": [[{"node": "Update Status (Sent)", "type": "main", "index": 0}]]},
+    "Tag: Rejected by Human": {"main": [[{"node": "Call Revision Sub-Workflow", "type": "main", "index": 0}]]}
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner"
+  }
+}

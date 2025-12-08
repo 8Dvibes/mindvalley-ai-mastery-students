@@ -1,0 +1,210 @@
+{
+  "name": "Echo Trigger (Fast Response)",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "echo-form",
+        "formTitle": "Echo Brand Voice Analysis",
+        "formDescription": "Analyze your writing samples to create a brand voice profile for AI agents. You'll receive results via email in 5-10 minutes.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Your Email",
+              "placeholder": "you@example.com",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Voice Type",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "personal"
+                  },
+                  {
+                    "option": "company"
+                  },
+                  {
+                    "option": "combined"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Person Name",
+              "placeholder": "e.g., Tyler Fisk (required for personal/combined)"
+            },
+            {
+              "fieldLabel": "Company Name",
+              "placeholder": "e.g., Hattie B's (required for company/combined)"
+            },
+            {
+              "fieldLabel": "Writing Samples",
+              "fieldType": "textarea",
+              "placeholder": "Paste your writing samples here (emails, transcripts, social posts). Minimum 500 words for best results.",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Company Materials",
+              "fieldType": "textarea",
+              "placeholder": "For company/combined: Paste brand guidelines, style guide, or marketing copy."
+            }
+          ]
+        },
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "form-trigger",
+      "name": "Echo Form",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        304
+      ],
+      "webhookId": "echo-form"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "email",
+              "name": "student_email",
+              "value": "={{ $json['Your Email'] || 'tyler@aibuildlab.com' }}",
+              "type": "string"
+            },
+            {
+              "id": "voice-type",
+              "name": "voice_type",
+              "value": "={{ $json['Voice Type'] || 'personal' }}",
+              "type": "string"
+            },
+            {
+              "id": "person-name",
+              "name": "person_name",
+              "value": "={{ $json['Person Name'] || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "company-name",
+              "name": "company_name",
+              "value": "={{ $json['Company Name'] || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "writing-samples",
+              "name": "writing_samples",
+              "value": "={{ $json['Writing Samples'] || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "company-materials",
+              "name": "company_materials",
+              "value": "={{ $json['Company Materials'] || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "skip-qc",
+              "name": "skip_qc",
+              "value": true,
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "capture-input",
+      "name": "Capture Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "=<!DOCTYPE html>\n<html>\n<head>\n  <title>Analysis Started!</title>\n  <style>\n    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 100px auto; padding: 20px; text-align: center; }\n    .success { background: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; padding: 30px; }\n    h1 { color: #155724; margin-bottom: 10px; }\n    p { color: #155724; font-size: 18px; line-height: 1.6; }\n    .email { font-weight: bold; }\n    .time { background: #fff; padding: 10px 20px; border-radius: 20px; display: inline-block; margin-top: 15px; }\n  </style>\n</head>\n<body>\n  <div class=\"success\">\n    <h1>Analysis Started!</h1>\n    <p>Your brand voice analysis is now running.</p>\n    <p>You'll receive an email at <span class=\"email\">{{ $json.student_email }}</span> with your files.</p>\n    <div class=\"time\">Estimated time: 5-10 minutes</div>\n  </div>\n</body>\n</html>",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html"
+              }
+            ]
+          }
+        }
+      },
+      "id": "respond-immediately",
+      "name": "Respond Immediately",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "workflowInputs": {
+          "mappingMode": "autoMapInputData",
+          "value": {}
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "id": "execute-processor-v3",
+      "name": "Execute Processor",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        672,
+        304
+      ],
+      "notes": "IMPORTANT: After importing, update this node to point to your imported Echo Processor workflow"
+    }
+  ],
+  "connections": {
+    "Echo Form": {
+      "main": [
+        [
+          {
+            "node": "Capture Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Capture Input": {
+      "main": [
+        [
+          {
+            "node": "Respond Immediately",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Execute Processor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
