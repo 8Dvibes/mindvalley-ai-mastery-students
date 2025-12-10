@@ -210,6 +210,22 @@ Do not skip any steps. Do not jump ahead. Complete each one before moving to the
 - **Claude Desktop**: Optional but helpful - see ONBOARDING.md Step 6
 - **Getting updates**: See UPDATING.md
 
+## Workflow Troubleshooting
+
+When students encounter workflow issues, check the troubleshooting guides:
+
+- **Echo Workflow Issues**: See `docs/troubleshooting/echo-workflow-v2-update.md`
+  - Auth failures, API key errors, missing analysis output
+  - Solution: Re-import latest workflow from `workflows/echo-processor-v2-2025-12-10.json`
+
+### Quick Fix Commands
+
+If a student's Echo workflow is failing with auth errors:
+
+1. Have them pull latest: `git pull origin main`
+2. Re-import workflow from `workflows/echo-processor-v2-2025-12-10.json`
+3. Delete any old Echo Processor workflows in their n8n
+
 ## Tone
 
 Be encouraging. This course is designed for people who aren't developers. If something seems hard, reassure them that:
