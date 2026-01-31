@@ -1,0 +1,68 @@
+{
+  "id": "6OBm0LYZrJ3yIffA",
+  "name": "Gemini File Search - List Documents (Webhook)",
+  "description": "Lists all documents in a Gemini File Search Store. Webhook endpoint: POST /kb-list-documents with apiKey and storeId in body.",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "kb-list-documents",
+        "responseMode": "lastNode",
+        "options": {"responseData": "firstEntryJson"}
+      },
+      "id": "Webhook",
+      "name": "Webhook /kb-list-documents",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [280, 300]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const { apiKey, storeId } = $json;\nif (!apiKey) {\n  return [{ json: { status: 'ERROR', error: 'apiKey required' } }];\n}\nif (!storeId) {\n  return [{ json: { status: 'ERROR', error: 'storeId required' } }];\n}\nreturn [{ json: { apiKey, storeId } }];"
+      },
+      "id": "Validate",
+      "name": "Validate Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://generativelanguage.googleapis.com/v1beta/{{$json.storeId}}/documents?key={{$json.apiKey}}",
+        "responseFormat": "json",
+        "options": {}
+      },
+      "id": "Http Request",
+      "name": "Fetch Documents",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [760, 300]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const res = $json;\nif (res.statusCode && res.statusCode !== 200) {\n  return [{ json: { status: 'ERROR', error: `Gemini returned ${res.statusCode}`, body: res.body || res } }];\n}\nconst body = res.body || res;\nreturn [{ json: { status: 'SUCCESS', documents: body.documents || body.files || [] } }];"
+      },
+      "id": "Return",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1000, 300]
+    }
+  ],
+  "connections": {
+    "Webhook /kb-list-documents": {"main": [[{"node": "Validate Input", "type": "main", "index": 0}]]},
+    "Validate Input": {"main": [[{"node": "Fetch Documents", "type": "main", "index": 0}]]},
+    "Fetch Documents": {"main": [[{"node": "Format Response", "type": "main", "index": 0}]]}
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "meta": null,
+  "pinData": null
+}

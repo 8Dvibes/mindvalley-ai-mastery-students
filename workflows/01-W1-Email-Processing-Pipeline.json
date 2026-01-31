@@ -1,0 +1,357 @@
+{
+  "id": "C2KIpNrNjr5TPMq6",
+  "name": "[1] Inbound Email → 6-Agent Pipeline → Sheets+Slack (FIXED)",
+  "description": "Full Hattie B's email processing pipeline with 6 AI agents: CinnaMon (Sentiment), Hatch (Expert Research), Sugar (Draft), Bishop (QA), and Holler (HITL Briefer). Includes revision loop for failed QA.",
+  "active": true,
+  "isArchived": false,
+  "nodeCount": 58,
+  "connectionCount": 57,
+  "nodes": [
+    {
+      "id": "64581001-f0e2-4fee-9e6c-3b8c6789bf91",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [-9888, 576],
+      "disabled": true
+    },
+    {
+      "id": "e4153bcf-36c3-4db3-8e02-3b2edcf689a6",
+      "name": "Settings",
+      "type": "n8n-nodes-base.set",
+      "position": [-9664, 480],
+      "disabled": false
+    },
+    {
+      "id": "67dc43ab-488e-4f95-905a-9d6d594fa203",
+      "name": "Temporal Context",
+      "type": "n8n-nodes-base.set",
+      "position": [-9440, 480],
+      "disabled": false
+    },
+    {
+      "id": "d3f834d5-f1f9-471e-9afd-700a790c1598",
+      "name": "Extract Email Data",
+      "type": "n8n-nodes-base.set",
+      "position": [-9216, 480],
+      "disabled": false
+    },
+    {
+      "id": "a27a74fc-dc5b-4732-bfa1-30dfd03053e9",
+      "name": "CinnaMon (Sentiment)",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [-8944, 480],
+      "disabled": false,
+      "description": "Sentiment analysis agent - analyzes customer emotion, urgency, and tone"
+    },
+    {
+      "id": "800229a8-e114-414e-8eca-744d8fa88fad",
+      "name": "CinnaMon Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "position": [-8992, 704],
+      "disabled": false
+    },
+    {
+      "id": "368b35b2-310b-48c7-a729-77ee15dc3851",
+      "name": "Hatch (Expert)",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [-7744, 480],
+      "disabled": false,
+      "description": "Expert research agent - retrieves relevant information from knowledge base"
+    },
+    {
+      "id": "7ce5af38-139a-4e56-8287-62bbafe6ec6b",
+      "name": "Hatch Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "position": [-7792, 704],
+      "disabled": false
+    },
+    {
+      "id": "247320ef-2baf-4179-9a23-3f228578609b",
+      "name": "Sugar v1 (Draft)",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [-6752, 480],
+      "disabled": false,
+      "description": "Email drafting agent - creates response in Hattie B's brand voice"
+    },
+    {
+      "id": "b3eb457f-c4ae-41d6-8811-7de3fdb926ac",
+      "name": "Sugar v1 Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "position": [-6752, 704],
+      "disabled": false
+    },
+    {
+      "id": "eca27d1d-59d0-4e34-8069-e661937fae70",
+      "name": "Bishop v1 (QA)",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [-5824, 480],
+      "disabled": false,
+      "description": "Quality assurance agent - evaluates draft against 5 rubrics"
+    },
+    {
+      "id": "4531eb7f-4526-4c63-805d-21ccbc359f7e",
+      "name": "Bishop v1 Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "position": [-5824, 704],
+      "disabled": false
+    },
+    {
+      "id": "3a877f7c-f382-4fe1-8ae8-a9ad68ae0c53",
+      "name": "QA Pass?",
+      "type": "n8n-nodes-base.if",
+      "position": [-4896, 480],
+      "disabled": false,
+      "description": "Routes to PASS (Holler) or FAIL (Revision loop)"
+    },
+    {
+      "id": "7cfa6477-10d9-401d-8974-a5bc6564e23a",
+      "name": "Holler (Briefer)",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [-1904, 480],
+      "disabled": false,
+      "description": "HITL briefing agent - creates Slack message for human review"
+    },
+    {
+      "id": "4cf9141e-7614-4cbf-8c25-a14d5a174ad8",
+      "name": "Holler Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "position": [-1904, 704],
+      "disabled": false
+    },
+    {
+      "id": "18c2074b-5e5a-47a6-a9fe-574d8461b02e",
+      "name": "Post to Slack",
+      "type": "n8n-nodes-base.slack",
+      "position": [-1328, 480],
+      "disabled": false
+    },
+    {
+      "id": "3b35c2c4-de12-422b-9a8d-a85292c1de05",
+      "name": "Success",
+      "type": "n8n-nodes-base.set",
+      "position": [-1104, 480],
+      "disabled": false
+    },
+    {
+      "id": "e8132671-e87c-4df5-84f8-1b7ce52a57f2",
+      "name": "Sugar v2 (Revision)",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [-3056, 608],
+      "disabled": false,
+      "description": "Revision drafting agent - incorporates Bishop's feedback"
+    },
+    {
+      "id": "353dde07-6fb2-46f8-a733-6a9f1e5810a8",
+      "name": "Sugar v2 Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "position": [-3056, 832],
+      "disabled": false
+    },
+    {
+      "id": "292f1b81-1ab1-473c-85e4-d70718a4fbc3",
+      "name": "When Called by Filter",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [-9888, 384],
+      "disabled": false,
+      "description": "Entry point from W0 Filter workflow"
+    },
+    {
+      "id": "9677d7cc-6482-4deb-9d4b-a5864ce1cdc8",
+      "name": "Librarian",
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "position": [-8608, 1136],
+      "disabled": false,
+      "description": "Knowledge base search tool using Gemini File Search"
+    },
+    {
+      "id": "5b771a8a-1b34-43d8-9dd4-af5fea003818",
+      "name": "Search Knowledge Base",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "position": [-8352, 1392],
+      "disabled": false
+    },
+    {
+      "id": "652aaaeb-ace5-4b6c-bdab-87591df7c0a6",
+      "name": "Exa MCP Client",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "position": [-7536, 704],
+      "disabled": false,
+      "description": "Web search tool via Exa MCP"
+    },
+    {
+      "id": "718ccd55-091e-4529-801d-56610b848f14",
+      "name": "De-Squish CinnaMon",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [-8368, 480],
+      "disabled": false,
+      "description": "JSON extraction for CinnaMon output"
+    },
+    {
+      "id": "283cb244-1a20-40f9-b62c-3d92043d2e7d",
+      "name": "Merge CinnaMon Data",
+      "type": "n8n-nodes-base.code",
+      "position": [-8016, 480],
+      "disabled": false
+    },
+    {
+      "id": "a96d4ad6-553a-44e4-8661-c2d7060cef30",
+      "name": "De-Squish Sugar v1",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [-6400, 480],
+      "disabled": false
+    },
+    {
+      "id": "ea9f0419-8494-45dc-a75c-edf8a56b990a",
+      "name": "Merge Sugar v1 Data",
+      "type": "n8n-nodes-base.code",
+      "position": [-6048, 480],
+      "disabled": false
+    },
+    {
+      "id": "1c5b0424-74d7-402c-be2d-e5328602861a",
+      "name": "De-Squish Bishop v1",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [-5472, 480],
+      "disabled": false
+    },
+    {
+      "id": "17641a3f-399a-4071-a8ee-3cba99b9a307",
+      "name": "Merge Bishop v1 Data",
+      "type": "n8n-nodes-base.code",
+      "position": [-5120, 480],
+      "disabled": false
+    },
+    {
+      "id": "253e7175-786e-43af-9552-9dc72376fc39",
+      "name": "De-Squish Sugar v2",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [-2704, 608],
+      "disabled": false
+    },
+    {
+      "id": "edd1c752-ffd1-40af-bdc8-bf04e80848a1",
+      "name": "Merge Sugar v2 Data",
+      "type": "n8n-nodes-base.code",
+      "position": [-2352, 608],
+      "disabled": false
+    },
+    {
+      "id": "66b4e1cd-8af8-4251-8f88-4cc8fdbe7675",
+      "name": "De-Squish Hatch",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [-7328, 480],
+      "disabled": false
+    },
+    {
+      "id": "2999de61-9d04-401b-a2bf-808bd954a156",
+      "name": "Merge Hatch Data",
+      "type": "n8n-nodes-base.code",
+      "position": [-6976, 480],
+      "disabled": false
+    },
+    {
+      "id": "5a8ebf7b-d706-455b-a218-42a4e42cd2a2",
+      "name": "Revision Decision",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [-4672, 608],
+      "disabled": false,
+      "description": "Decides if revision needs Sugar-only or full Hatch+Sugar"
+    },
+    {
+      "id": "4e2a4593-aa7d-4b49-b4be-8179140c17c6",
+      "name": "Sugar Only?",
+      "type": "n8n-nodes-base.if",
+      "position": [-4320, 608],
+      "disabled": false
+    },
+    {
+      "id": "b2955797-6a89-4b51-a08d-f15a697626f6",
+      "name": "Hatch v2 (Re-research)",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [-4048, 736],
+      "disabled": false,
+      "description": "Re-research agent for failed QA due to factual issues"
+    },
+    {
+      "id": "445dc942-477a-4b43-abec-300d483bf8bf",
+      "name": "De-Squish Hatch v2",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [-3632, 736],
+      "disabled": false
+    },
+    {
+      "id": "6377066f-3e45-4ba9-8325-3e4f4396f3ec",
+      "name": "Merge Hatch v2 Data",
+      "type": "n8n-nodes-base.code",
+      "position": [-3280, 736],
+      "disabled": false
+    },
+    {
+      "id": "93bbd1fb-7f7c-4527-83d5-1e6e040e2cfa",
+      "name": "Librarian LLM (Flash 3.0)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "position": [-8640, 1408],
+      "disabled": false
+    },
+    {
+      "id": "0b274bcc-7773-48e7-98f2-da121bd49d5e",
+      "name": "Final Path Merge",
+      "type": "n8n-nodes-base.code",
+      "position": [-2128, 480],
+      "disabled": false
+    },
+    {
+      "id": "76379791-45d1-4b48-a860-724f663e44a6",
+      "name": "Assemble Slack Message",
+      "type": "n8n-nodes-base.code",
+      "position": [-1552, 480],
+      "disabled": false
+    },
+    {
+      "id": "8860f22d-1e73-4e44-ac5c-190218432b2c",
+      "name": "Write Draft to Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [-2016, 480],
+      "disabled": false
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {"main": [[{"node": "Settings", "type": "main", "index": 0}]]},
+    "Settings": {"main": [[{"node": "Temporal Context", "type": "main", "index": 0}]]},
+    "Temporal Context": {"main": [[{"node": "Extract Email Data", "type": "main", "index": 0}]]},
+    "Extract Email Data": {"main": [[{"node": "CinnaMon (Sentiment)", "type": "main", "index": 0}]]},
+    "CinnaMon (Sentiment)": {"main": [[{"node": "De-Squish CinnaMon", "type": "main", "index": 0}]]},
+    "De-Squish CinnaMon": {"main": [[{"node": "Merge CinnaMon Data", "type": "main", "index": 0}]]},
+    "Merge CinnaMon Data": {"main": [[{"node": "Hatch (Expert)", "type": "main", "index": 0}]]},
+    "Hatch (Expert)": {"main": [[{"node": "De-Squish Hatch", "type": "main", "index": 0}]]},
+    "De-Squish Hatch": {"main": [[{"node": "Merge Hatch Data", "type": "main", "index": 0}]]},
+    "Merge Hatch Data": {"main": [[{"node": "Sugar v1 (Draft)", "type": "main", "index": 0}]]},
+    "Sugar v1 (Draft)": {"main": [[{"node": "De-Squish Sugar v1", "type": "main", "index": 0}]]},
+    "De-Squish Sugar v1": {"main": [[{"node": "Merge Sugar v1 Data", "type": "main", "index": 0}]]},
+    "Merge Sugar v1 Data": {"main": [[{"node": "Bishop v1 (QA)", "type": "main", "index": 0}]]},
+    "Bishop v1 (QA)": {"main": [[{"node": "De-Squish Bishop v1", "type": "main", "index": 0}]]},
+    "De-Squish Bishop v1": {"main": [[{"node": "Merge Bishop v1 Data", "type": "main", "index": 0}]]},
+    "Merge Bishop v1 Data": {"main": [[{"node": "QA Pass?", "type": "main", "index": 0}]]},
+    "QA Pass?": {"main": [[{"node": "Final Path Merge", "type": "main", "index": 0}], [{"node": "Revision Decision", "type": "main", "index": 0}]]},
+    "Revision Decision": {"main": [[{"node": "Sugar Only?", "type": "main", "index": 0}]]},
+    "Sugar Only?": {"main": [[{"node": "Sugar v2 (Revision)", "type": "main", "index": 0}], [{"node": "Hatch v2 (Re-research)", "type": "main", "index": 0}]]},
+    "Hatch v2 (Re-research)": {"main": [[{"node": "De-Squish Hatch v2", "type": "main", "index": 0}]]},
+    "De-Squish Hatch v2": {"main": [[{"node": "Merge Hatch v2 Data", "type": "main", "index": 0}]]},
+    "Merge Hatch v2 Data": {"main": [[{"node": "Sugar v2 (Revision)", "type": "main", "index": 0}]]},
+    "Sugar v2 (Revision)": {"main": [[{"node": "De-Squish Sugar v2", "type": "main", "index": 0}]]},
+    "De-Squish Sugar v2": {"main": [[{"node": "Merge Sugar v2 Data", "type": "main", "index": 0}]]},
+    "Merge Sugar v2 Data": {"main": [[{"node": "Final Path Merge", "type": "main", "index": 0}]]},
+    "Final Path Merge": {"main": [[{"node": "Write Draft to Sheets", "type": "main", "index": 0}]]},
+    "Write Draft to Sheets": {"main": [[{"node": "Holler (Briefer)", "type": "main", "index": 0}]]},
+    "Holler (Briefer)": {"main": [[{"node": "Assemble Slack Message", "type": "main", "index": 0}]]},
+    "Assemble Slack Message": {"main": [[{"node": "Post to Slack", "type": "main", "index": 0}]]},
+    "Post to Slack": {"main": [[{"node": "Success", "type": "main", "index": 0}]]},
+    "When Called by Filter": {"main": [[{"node": "Settings", "type": "main", "index": 0}]]}
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "_note": "This is a structure-only export. The full workflow contains 58 nodes with detailed agent prompts and is approximately 800KB. The node parameters (system prompts, LLM configurations, etc.) are stored in the n8n Cloud instance at aibuildlab.app.n8n.cloud."
+}

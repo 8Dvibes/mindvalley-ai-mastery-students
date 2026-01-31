@@ -1,0 +1,166 @@
+{
+  "id": "iFn7brifjBPB9SvH",
+  "name": "Gemini File Search Ingestion Engine v2",
+  "description": "Document upload workflow for Gemini File Search. Supports both manual file path input and webhook binary input. Validates file type (PDF, TXT, MD, DOCX) and size (max 100MB).",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "c4fea6e6-6694-44d7-b7d4-666509e90f2c",
+      "name": "Manual Start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "notes": "For direct use: Click 'Test Workflow' to upload a document."
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gemini-ingestion",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "0701d9ec-4c82-464d-8220-e2abd1aa5b05",
+      "name": "Webhook Start",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 208],
+      "webhookId": "gemini-ingestion-webhook",
+      "notes": "For automation: Called by Drive Watcher workflow."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {"id": "api-key", "name": "api_key", "value": "YOUR_GEMINI_API_KEY_HERE", "type": "string"},
+            {"id": "store-id", "name": "store_id", "value": "fileSearchStores/YOUR_STORE_ID_HERE", "type": "string"},
+            {"id": "file-path", "name": "file_path", "value": "/path/to/your/document.pdf", "type": "string"},
+            {"id": "doc-type", "name": "doc_type", "value": "general", "type": "string"}
+          ]
+        },
+        "options": {}
+      },
+      "id": "2a3a5ea4-f1ab-4257-b3db-4253c583227f",
+      "name": "Your Settings (Manual)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [224, 0],
+      "notes": "EDIT THIS NODE for manual uploads"
+    },
+    {
+      "parameters": {"jsCode": "// Process webhook input and extract config"},
+      "id": "439f77af-d6af-4fd3-b446-a78d19768663",
+      "name": "Process Webhook Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [224, 208],
+      "notes": "Extracts configuration and binary data from webhook request."
+    },
+    {
+      "parameters": {"fileSelector": "={{ $json.file_path }}"},
+      "id": "aef2070a-977b-496c-a220-d2a4e1d209a4",
+      "name": "Read Your Document",
+      "type": "n8n-nodes-base.readBinaryFiles",
+      "typeVersion": 1,
+      "position": [448, 0],
+      "notes": "Reads the file from your computer (manual mode only)."
+    },
+    {
+      "parameters": {"mode": "combine", "combineBy": "combineAll", "options": {}},
+      "id": "6a58585f-482a-4b0a-b5fd-f3cc9dc2d427",
+      "name": "Merge Inputs",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [672, 112],
+      "notes": "Combines manual and webhook inputs into single flow."
+    },
+    {
+      "parameters": {"jsCode": "// Gemini File Search Ingestion Engine v2"},
+      "id": "0d88fdac-0152-48ad-bf3d-04684ea8968e",
+      "name": "Upload to Gemini",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, 112],
+      "notes": "Validates file and uploads to Gemini File Search using resumable upload protocol."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [{"id": "condition-success", "leftValue": "={{ $json.status }}", "rightValue": "SUCCESS", "operator": {"type": "string", "operation": "equals"}}]
+        }
+      },
+      "id": "eae3c69f-7ded-474e-8e8d-75258777d215",
+      "name": "Upload OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1104, 112]
+    },
+    {
+      "parameters": {"url": "=https://generativelanguage.googleapis.com/v1beta/{{ $json._verification.store_id }}/files?key={{ $json._verification.api_key }}", "options": {}},
+      "id": "a3d425eb-f01f-4187-b913-8c81be9799ba",
+      "name": "Verify Upload",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1328, 0],
+      "notes": "Queries the store to confirm the file was added successfully."
+    },
+    {
+      "parameters": {"assignments": {"assignments": []},"options": {}},
+      "id": "29b3071a-5fed-46be-8612-d697f2adb6aa",
+      "name": "Success Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1552, 0],
+      "notes": "Formats the final success response with verification status."
+    },
+    {
+      "parameters": {"assignments": {"assignments": []}, "options": {}},
+      "id": "43944498-6dba-424d-9071-4b5b8d21bd7f",
+      "name": "Error Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1328, 208],
+      "notes": "Formats the error response with troubleshooting guidance."
+    },
+    {
+      "parameters": {"respondWith": "json", "responseBody": "={{ $json }}", "options": {}},
+      "id": "b86d52b0-6fb2-42db-8d3b-f199fff1676d",
+      "name": "Webhook Response (Success)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1760, 0],
+      "notes": "Returns success response to webhook caller."
+    },
+    {
+      "parameters": {"respondWith": "json", "responseBody": "={{ $json }}", "options": {"responseCode": 400}},
+      "id": "6b61d6f6-c623-4ddb-90da-cfe1c0aef493",
+      "name": "Webhook Response (Error)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1552, 208],
+      "notes": "Returns error response to webhook caller."
+    }
+  ],
+  "connections": {
+    "Manual Start": {"main": [[{"node": "Your Settings (Manual)", "type": "main", "index": 0}]]},
+    "Webhook Start": {"main": [[{"node": "Process Webhook Input", "type": "main", "index": 0}]]},
+    "Your Settings (Manual)": {"main": [[{"node": "Read Your Document", "type": "main", "index": 0}]]},
+    "Process Webhook Input": {"main": [[{"node": "Merge Inputs", "type": "main", "index": 1}]]},
+    "Read Your Document": {"main": [[{"node": "Merge Inputs", "type": "main", "index": 0}]]},
+    "Merge Inputs": {"main": [[{"node": "Upload to Gemini", "type": "main", "index": 0}]]},
+    "Upload to Gemini": {"main": [[{"node": "Upload OK?", "type": "main", "index": 0}]]},
+    "Upload OK?": {"main": [[{"node": "Verify Upload", "type": "main", "index": 0}], [{"node": "Error Result", "type": "main", "index": 0}]]},
+    "Verify Upload": {"main": [[{"node": "Success Result", "type": "main", "index": 0}]]},
+    "Success Result": {"main": [[{"node": "Webhook Response (Success)", "type": "main", "index": 0}]]},
+    "Error Result": {"main": [[{"node": "Webhook Response (Error)", "type": "main", "index": 0}]]}
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "tags": ["RAG", "Week-3", "Gemini"],
+  "meta": null,
+  "pinData": {}
+}

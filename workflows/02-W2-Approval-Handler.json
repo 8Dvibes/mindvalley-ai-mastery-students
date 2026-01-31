@@ -1,0 +1,221 @@
+{
+  "id": "wyuE6DJqNXhX3K7B",
+  "name": "[2] Slack Approval → Ship/Revise/Confirm Handler (FIXED)",
+  "description": "Handles human responses to Holler's SITREP messages in Slack. Classifies intent as SHIP, REVISE, or CONFIRM and routes accordingly.",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "trigger": ["message"],
+        "channelId": {"__rl": true, "mode": "id", "value": "C0A0MBQ2L8P"},
+        "options": {"resolveIds": true}
+      },
+      "id": "b55152b7-7d0d-4833-a469-404b4f349cb9",
+      "name": "Slack Trigger",
+      "type": "n8n-nodes-base.slackTrigger",
+      "typeVersion": 1,
+      "position": [-1696, 352]
+    },
+    {
+      "parameters": {
+        "url": "https://slack.com/api/conversations.replies",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {"parameters": [{"name": "channel", "value": "={{ $json.channel }}"}, {"name": "ts", "value": "={{ $json.thread_ts }}"}]},
+        "options": {}
+      },
+      "id": "a44632d1-751e-416a-b87b-693b5e1bdf49",
+      "name": "Get Thread Context",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [-1248, 352]
+    },
+    {
+      "parameters": {
+        "jsCode": "const messages = $input.first().json.messages || [];\nconst replyMessage = $('Slack Trigger').first().json.text || '';\nconst threadTs = $('Slack Trigger').first().json.thread_ts;\n\nconst hollerBotId = 'U0A0GJN18JK';\nlet parentContent = '';\nfor (const msg of messages) {\n  if (msg.bot_id || msg.user === hollerBotId || !msg.user) {\n    parentContent += (msg.text || '') + '\\n';\n  } else {\n    if (msg.ts !== $('Slack Trigger').first().json.ts) {\n      break;\n    }\n  }\n}\n\nif (!parentContent.trim()) {\n  parentContent = messages[0]?.text || '';\n}\n\nconst execIdMatch = parentContent.match(/Exec(?:ution)? ID[:\\s]*(\\d+)/i);\nconst executionId = execIdMatch ? execIdMatch[1].trim() : null;\n\nconst fromMatch = parentContent.match(/\\*From:\\*\\s*([^\\n]+)/);\nconst subjectMatch = parentContent.match(/\\*Subject:\\*\\s*([^\\n]+)/);\n\nreturn [{\n  json: {\n    execution_id: executionId,\n    reply_text: replyMessage,\n    thread_ts: threadTs,\n    from_email: fromMatch ? fromMatch[1].trim() : '',\n    subject: subjectMatch ? subjectMatch[1].trim() : '',\n    parent_message: parentContent\n  }\n}];"
+      },
+      "id": "817eecc3-7dd1-4da0-9f55-9f3b61e898fc",
+      "name": "Parse Thread Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-1024, 352]
+    },
+    {
+      "parameters": {
+        "model": {"__rl": true, "value": "claude-sonnet-4-5-20250929", "mode": "list"},
+        "options": {}
+      },
+      "id": "a47ee7ab-0171-4cca-90d6-e5e020457b23",
+      "name": "Claude Sonnet 4",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [-512, 272]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.reply_text }}",
+        "options": {
+          "systemMessage": "You are an intent classifier for email approval replies. Analyze the reply and return EXACTLY one word:\n\nSHIP - if approving/sending (e.g., \"ship it\", \"send it\", \"approved\", \"looks good\", \"go ahead\")\nREVISE - if requesting changes (e.g., \"revise\", \"change X\", \"make it shorter\", any specific feedback)\nCONFIRM - if just acknowledging (e.g., \"thanks\", \"got it\", \"confirmed\")\n\nOutput only: SHIP, REVISE, or CONFIRM"
+        }
+      },
+      "id": "e499f392-d39a-40f0-944e-d71520e9f14a",
+      "name": "Intent Classifier",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [-576, 48]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {"conditions": {"conditions": [{"leftValue": "={{ $json.output }}", "rightValue": "SHIP", "operator": {"type": "string", "operation": "contains"}}]}, "renameOutput": true, "outputKey": "SHIP"},
+            {"conditions": {"conditions": [{"leftValue": "={{ $json.output }}", "rightValue": "REVISE", "operator": {"type": "string", "operation": "contains"}}]}, "renameOutput": true, "outputKey": "REVISE"},
+            {"conditions": {"conditions": [{"leftValue": "={{ $json.output }}", "rightValue": "CONFIRM", "operator": {"type": "string", "operation": "contains"}}]}, "renameOutput": true, "outputKey": "CONFIRM"}
+          ]
+        },
+        "options": {"fallbackOutput": "extra", "ignoreCase": true, "renameFallbackOutput": "CONFIRM"}
+      },
+      "id": "b8cf9eed-fe37-401e-88eb-6bd305e6790c",
+      "name": "Route by Intent",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [-224, 112]
+    },
+    {
+      "parameters": {
+        "documentId": {"__rl": true, "mode": "id", "value": "1xTng5h4vCWzFRtEvs05FX1lwguB6Mob-2G_LTgicn4I"},
+        "sheetName": {"__rl": true, "value": "gid=0", "mode": "list", "cachedResultName": "Email Drafts"},
+        "filtersUI": {"values": [{"lookupColumn": "execution_id", "lookupValue": "={{ $('Parse Thread Data').item.json.execution_id }}"}]},
+        "options": {"returnFirstMatch": true}
+      },
+      "id": "fe59998f-6fdd-417f-96ca-2a06ce9050c0",
+      "name": "Get Draft from Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const draftBody = $input.first().json.draft_body || '';\n\nfunction markdownToHtml(text) {\n  let html = text;\n  html = html.replace(/\\r\\n/g, '\\n');\n  html = html.replace(/\\n\\n+/g, '</p><p>');\n  html = html.replace(/\\n/g, '<br>\\n');\n  html = html.replace(/\\*\\*([^*]+)\\*\\*/g, '<strong>$1</strong>');\n  html = html.replace(/__([^_]+)__/g, '<strong>$1</strong>');\n  if (!html.startsWith('<p>')) html = '<p>' + html;\n  if (!html.endsWith('</p>')) html = html + '</p>';\n  html = html.replace(/<p><\\/p>/g, '');\n  return html;\n}\n\nconst htmlBody = markdownToHtml(draftBody);\nconst originalData = $input.first().json;\n\nreturn [{ json: { ...originalData, draft_body_html: htmlBody, draft_body_original: draftBody } }];"
+      },
+      "id": "format-email-body-node",
+      "name": "Format Email Body",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [112, 0]
+    },
+    {
+      "parameters": {
+        "operation": "reply",
+        "messageId": "={{ $json.gmail_message_id }}",
+        "message": "={{ $json.draft_body_html }}",
+        "options": {}
+      },
+      "id": "70787849-c1b4-41bb-bb34-bf5717447b4d",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [336, 0]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {"__rl": true, "mode": "id", "value": "1xTng5h4vCWzFRtEvs05FX1lwguB6Mob-2G_LTgicn4I"},
+        "sheetName": {"__rl": true, "value": "gid=0", "mode": "list"},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "execution_id": "={{ $('Parse Thread Data').item.json.execution_id }}",
+            "status": "sent",
+            "sent_at": "={{ $now.toISO() }}",
+            "updated_at": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": ["execution_id"]
+        },
+        "options": {}
+      },
+      "id": "00bfa8b7-05e4-4077-807f-bd8e47137a89",
+      "name": "Update Sheet Status",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [560, 0]
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {"__rl": true, "mode": "id", "value": "={{ $('Slack Trigger').first().json.channel }}"},
+        "text": "Email sent successfully!",
+        "otherOptions": {}
+      },
+      "id": "b1116276-41e9-40f6-ab7b-6447dd47756a",
+      "name": "Confirm in Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [928, -16]
+    },
+    {
+      "parameters": {
+        "workflowId": {"__rl": true, "value": "t8sUvZ8xzoqNfYH5", "mode": "id"},
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "execution_id": "={{ $('Parse Thread Data').item.json.execution_id }}",
+            "revision_count": "={{ ($('Get Draft for Revision').first().json.revision_count || 0) + 1 }}",
+            "human_feedback": "={{ $('Parse Thread Data').item.json.reply_text }}",
+            "original_email": "={{ { subject: $('Get Draft for Revision').first().json.original_subject, sender: $('Get Draft for Revision').first().json.sender_email, body: $('Get Draft for Revision').first().json.original_body } }}",
+            "previous_draft": "={{ $('Get Draft for Revision').first().json.draft_body }}",
+            "cinnamon_analysis": "={{ $('Get Draft for Revision').first().json.cinnamon_analysis }}",
+            "hatch_analysis": "={{ $('Get Draft for Revision').first().json.hatch_analysis }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "e315674e-9545-47fd-9b8a-98166674090c",
+      "name": "Call SUB Workflow",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [432, 208]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {"leftValue": "={{ $json.thread_ts }}", "rightValue": "", "operator": {"type": "string", "operation": "notEmpty"}},
+            {"leftValue": "={{ $json.thread_ts }}", "rightValue": "={{ $json.ts }}", "operator": {"type": "string", "operation": "notEquals"}}
+          ]
+        },
+        "options": {}
+      },
+      "id": "199f6d7c-4edf-4e40-902c-eaabb1468464",
+      "name": "Filter Holler Replies",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [-1472, 352]
+    }
+  ],
+  "connections": {
+    "Slack Trigger": {"main": [[{"node": "Filter Holler Replies", "type": "main", "index": 0}]]},
+    "Filter Holler Replies": {"main": [[{"node": "Get Thread Context", "type": "main", "index": 0}]]},
+    "Get Thread Context": {"main": [[{"node": "Parse Thread Data", "type": "main", "index": 0}]]},
+    "Parse Thread Data": {"main": [[{"node": "Check Parse Success", "type": "main", "index": 0}]]},
+    "Claude Sonnet 4": {"ai_languageModel": [[{"node": "Intent Classifier", "type": "ai_languageModel", "index": 0}]]},
+    "Intent Classifier": {"main": [[{"node": "Route by Intent", "type": "main", "index": 0}]]},
+    "Route by Intent": {"main": [[{"node": "Get Draft from Sheet", "type": "main", "index": 0}], [{"node": "Get Draft for Revision", "type": "main", "index": 0}], [{"node": "Update Sheet Confirmed", "type": "main", "index": 0}]]},
+    "Get Draft from Sheet": {"main": [[{"node": "Format Email Body", "type": "main", "index": 0}]]},
+    "Format Email Body": {"main": [[{"node": "Send Email", "type": "main", "index": 0}]]},
+    "Send Email": {"main": [[{"node": "Update Sheet Status", "type": "main", "index": 0}]]},
+    "Update Sheet Status": {"main": [[{"node": "Tag Original Email", "type": "main", "index": 0}]]},
+    "Tag Original Email": {"main": [[{"node": "Confirm in Slack", "type": "main", "index": 0}]]},
+    "Call SUB Workflow": {"main": [[{"node": "Assemble Revision SITREP", "type": "main", "index": 0}]]}
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "meta": null,
+  "pinData": {}
+}

@@ -1,0 +1,169 @@
+{
+  "id": "hAUZlEDljnO7uXnT",
+  "name": "Librarian Tool v2 (File Search)",
+  "description": "Knowledge base search tool using Gemini File Search. Multi-store routing based on keywords. Returns grounded answers with source citations.",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {"id": "api-key", "name": "gemini_api_key", "value": "***REMOVED***", "type": "string"},
+            {"id": "default-store", "name": "default_store", "value": "fileSearchStores/hattie-bs-knowledge-base-a4r93m4pxm7k", "type": "string"},
+            {"id": "stores", "name": "store_registry", "value": "{\"hattieb\":{\"name\":\"fileSearchStores/hattie-bs-knowledge-base-a4r93m4pxm7k\",\"keywords\":[\"menu\",\"heat\",\"spice\",\"location\",\"hours\",\"policy\",\"catering\",\"gift card\",\"loyalty\",\"coop\",\"chicken\",\"faq\",\"brand\",\"voice\"],\"description\":\"Hattie Bs Hot Chicken knowledge base\"}}", "type": "string"},
+            {"id": "max-stores", "name": "max_stores_per_query", "value": 5, "type": "number"},
+            {"id": "system-prompt", "name": "librarian_prompt", "value": "You are the Librarian, a specialized retrieval tool for Hattie B's Hot Chicken. Your job is to find relevant information from the knowledge base.\n\nRules:\n1. Search the knowledge base thoroughly for relevant information\n2. Provide accurate answers based on the documents\n3. Include specific details like hours, locations, prices when available\n4. If information is not found, say so clearly\n5. Be helpful and conversational in your responses\n\nAlways cite which document the information came from when possible.", "type": "string"}
+          ]
+        },
+        "options": {}
+      },
+      "id": "store-registry",
+      "name": "Store Registry",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [385.9571088165212, 96]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('When Executed by Another Workflow').first().json;\nconst errors = [];\n\nif (!input.query || typeof input.query !== 'string' || input.query.trim() === '') {\n  errors.push({field: 'query', message: 'Missing or empty query string'});\n}\n\nconst callDepth = input.call_depth ?? 0;\nif (callDepth > 3) {\n  return [{json: {status: 'ERROR', error: 'Maximum call depth reached', validation_passed: false}}];\n}\n\nif (errors.length > 0) {\n  return [{json: {status: 'ERROR', error: 'Input validation failed', details: errors, validation_passed: false}}];\n}\n\nreturn [{json: {query: input.query.trim(), context: input.context || {}, store_hints: input.store_hints || [], call_depth: callDepth, validation_passed: true}}];",
+        "mode": "runOnceForAllItems",
+        "language": "javaScript"
+      },
+      "id": "validate-input",
+      "name": "Validate Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [609.9571088165212, 96]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [{"id": "validation-check", "leftValue": "={{ $json.validation_passed }}", "rightValue": true, "operator": {"type": "boolean", "operation": "equals"}}]
+        }
+      },
+      "id": "check-validation",
+      "name": "Validation OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [833.9571088165212, 96]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const input = $input.first().json;\nconst storeRegistryStr = $('Store Registry').first().json.store_registry;\nconst storeRegistry = JSON.parse(storeRegistryStr);\nconst defaultStore = $('Store Registry').first().json.default_store;\n\nconst query = input.query.toLowerCase();\nconst selectedStoreNames = [];\nconst storeLabels = [];\n\nObject.entries(storeRegistry).forEach(([label, config]) => {\n  if (!selectedStoreNames.includes(config.name)) {\n    const hasKeywordMatch = config.keywords.some(kw => query.includes(kw.toLowerCase()));\n    if (hasKeywordMatch) {\n      selectedStoreNames.push(config.name);\n      storeLabels.push(label);\n    }\n  }\n});\n\nif (selectedStoreNames.length === 0) {\n  selectedStoreNames.push(defaultStore);\n  storeLabels.push('hattieb');\n}\n\nreturn [{json: {...input, selected_store_names: selectedStoreNames.slice(0, 5), selected_store_labels: storeLabels.slice(0, 5)}}];"
+      },
+      "id": "decide-stores",
+      "name": "Decide Stores to Query",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1057.9571088165212, 0]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const input = $input.first().json;\nconst apiKey = $('Store Registry').first().json.gemini_api_key;\nconst systemPrompt = $('Store Registry').first().json.librarian_prompt;\n\nconst requestBody = {\n  contents: [{role: 'user', parts: [{text: input.query}]}],\n  systemInstruction: {parts: [{text: systemPrompt}]},\n  tools: [{fileSearch: {fileSearchStoreNames: input.selected_store_names}}],\n  generationConfig: {temperature: 0.3, maxOutputTokens: 2048}\n};\n\nreturn [{json: {...input, api_key: apiKey, request_body: requestBody, api_url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + apiKey}}];"
+      },
+      "id": "build-request",
+      "name": "Build Gemini Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1281.9571088165212, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.api_url }}",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "Content-Type", "value": "application/json"}]},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.request_body) }}",
+        "options": {"response": {"response": {"fullResponse": true, "responseFormat": "json"}}}
+      },
+      "id": "gemini-search",
+      "name": "Gemini File Search",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1505.9571088165212, 0]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const input = $('Build Gemini Request').first().json;\nconst httpResponse = $input.first().json;\nconst response = httpResponse.body || httpResponse;\n\nif (response.error) {\n  return [{json: {status: 'ERROR', error: response.error.message || 'Gemini API error', query_used: input.query, answer: null, grounding_chunks: [], call_depth: (input.call_depth || 0) + 1}}];\n}\n\nconst candidates = response.candidates || [];\nconst candidate = candidates[0] || {};\nconst answerText = candidate.content?.parts?.[0]?.text || '';\nconst groundingMetadata = candidate.groundingMetadata || {};\nconst groundingChunks = groundingMetadata.groundingChunks || [];\n\nconst chunks = groundingChunks.map((chunk, idx) => ({\n  id: idx + 1,\n  text: chunk.retrievedContext?.text?.substring(0, 500) || '',\n  source: chunk.retrievedContext?.fileSearchStore || 'unknown'\n}));\n\nreturn [{\n  json: {\n    status: answerText.length > 0 ? 'SUCCESS' : 'NO_RESULTS',\n    query_used: input.query,\n    stores_queried: input.selected_store_labels,\n    documents_found: chunks.length,\n    answer: answerText,\n    grounding_chunks: chunks,\n    call_depth: (input.call_depth || 0) + 1\n  }\n}];"
+      },
+      "id": "process-response",
+      "name": "Process Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1729.9571088165212, 0]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {"id": "status", "name": "status", "value": "={{ $json.status }}", "type": "string"},
+            {"id": "query", "name": "query_used", "value": "={{ $json.query_used }}", "type": "string"},
+            {"id": "stores", "name": "stores_queried", "value": "={{ $json.stores_queried }}", "type": "array"},
+            {"id": "docs", "name": "documents_found", "value": "={{ $json.documents_found }}", "type": "number"},
+            {"id": "answer", "name": "answer", "value": "={{ $json.answer }}", "type": "string"},
+            {"id": "chunks", "name": "grounding_chunks", "value": "={{ $json.grounding_chunks }}", "type": "array"},
+            {"id": "depth", "name": "call_depth", "value": "={{ $json.call_depth }}", "type": "number"}
+          ]
+        },
+        "options": {}
+      },
+      "id": "format-success",
+      "name": "Format Success Output",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1953.9571088165212, 0]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {"id": "status", "name": "status", "value": "={{ $json.status }}", "type": "string"},
+            {"id": "error", "name": "error", "value": "={{ $json.error }}", "type": "string"},
+            {"id": "depth", "name": "call_depth", "value": "={{ $json.call_depth }}", "type": "number"}
+          ]
+        },
+        "options": {}
+      },
+      "id": "format-error",
+      "name": "Format Error Output",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1057.9571088165212, 192]
+    },
+    {
+      "parameters": {"workflowInputs": {"values": [{"name": "query"}]}},
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [161.9571088165212, 96],
+      "id": "3511a47b-3aef-45a2-817a-e81028b1da53",
+      "name": "When Executed by Another Workflow"
+    }
+  ],
+  "connections": {
+    "Store Registry": {"main": [[{"node": "Validate Input", "type": "main", "index": 0}]]},
+    "Validate Input": {"main": [[{"node": "Validation OK?", "type": "main", "index": 0}]]},
+    "Validation OK?": {"main": [[{"node": "Decide Stores to Query", "type": "main", "index": 0}], [{"node": "Format Error Output", "type": "main", "index": 0}]]},
+    "Decide Stores to Query": {"main": [[{"node": "Build Gemini Request", "type": "main", "index": 0}]]},
+    "Build Gemini Request": {"main": [[{"node": "Gemini File Search", "type": "main", "index": 0}]]},
+    "Gemini File Search": {"main": [[{"node": "Process Response", "type": "main", "index": 0}]]},
+    "Process Response": {"main": [[{"node": "Format Success Output", "type": "main", "index": 0}]]},
+    "When Executed by Another Workflow": {"main": [[{"node": "Store Registry", "type": "main", "index": 0}]]}
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "tags": ["RAG", "Multi-Store", "Week-3", "Tool", "DEC-018", "Gemini"],
+  "meta": null,
+  "pinData": {}
+}

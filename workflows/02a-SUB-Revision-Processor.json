@@ -1,0 +1,176 @@
+{
+  "id": "t8sUvZ8xzoqNfYH5",
+  "name": "[2a] Revision Subprocess → Hatch/Sugar/Bishop (FIXED)",
+  "description": "Sub-workflow called by W2 Approval Handler when REVISE intent is detected. Re-runs Hatch (research), Sugar (draft), and Bishop (QA) with human feedback incorporated.",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {"inputSource": "passthrough"},
+      "id": "5b90d0d7-4e0f-4a5f-a0d0-61764ba24557",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [0, 0],
+      "notes": "Triggered by W2 Approval Handler when REVISE intent detected"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {"id": "set-execution-id", "name": "execution_id", "value": "={{ $json.execution_id }}", "type": "string"},
+            {"id": "set-revision-count", "name": "revision_count", "value": "={{ $json.revision_count }}", "type": "number"},
+            {"id": "set-human-feedback", "name": "human_feedback", "value": "={{ $json.human_feedback }}", "type": "string"},
+            {"id": "set-original-email", "name": "original_email", "value": "={{ $json.original_email }}", "type": "object"},
+            {"id": "set-previous-draft", "name": "previous_draft", "value": "={{ $json.previous_draft }}", "type": "string"},
+            {"id": "set-cinnamon", "name": "cinnamon_analysis", "value": "={{ typeof $json.cinnamon_analysis === 'string' ? JSON.parse($json.cinnamon_analysis) : $json.cinnamon_analysis }}", "type": "object"},
+            {"id": "set-hatch", "name": "hatch_analysis", "value": "={{ $json.hatch_analysis }}", "type": "string"},
+            {"id": "set-temporal-now", "name": "current_datetime", "value": "={{ $now.toISO() }}", "type": "string"},
+            {"id": "set-temporal-day", "name": "day_of_week", "value": "={{ $now.format('EEEE') }}", "type": "string"},
+            {"id": "set-temporal-holiday", "name": "is_holiday_season", "value": "={{ ['11', '12', '01'].includes($now.format('MM')) }}", "type": "boolean"}
+          ]
+        },
+        "options": {}
+      },
+      "id": "06b6b8e3-6665-4457-95b0-c148a4b2f7ef",
+      "name": "Prepare Revision Context",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [224, 0],
+      "notes": "Extracts and normalizes all inputs for the revision chain"
+    },
+    {
+      "parameters": {"promptType": "define", "options": {}},
+      "id": "e7dc628b-d7e5-4854-b590-b286af458bac",
+      "name": "Hatch (Revision Analysis)",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [512, 0],
+      "notes": "Re-analyzes with human feedback incorporated"
+    },
+    {
+      "parameters": {"promptType": "define", "options": {}},
+      "id": "bde43c9e-78ca-4db4-8344-091e0f06ea73",
+      "name": "Sugar (Revision Draft)",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [976, 0],
+      "notes": "Produces revised email based on human feedback"
+    },
+    {
+      "parameters": {"jsCode": "// Parse Sugar's output to extract the email draft"},
+      "id": "07a79b23-31c2-44e7-a0f2-39ead5f7cfd3",
+      "name": "Parse Sugar Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1376, 0],
+      "notes": "Extracts subject and body from Sugar's structured output"
+    },
+    {
+      "parameters": {"promptType": "define", "hasOutputParser": true, "options": {}},
+      "id": "a2e03a1f-d4fe-4a35-9429-dcfb8e4ff21e",
+      "name": "Bishop (QA Evaluation)",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [1728, 0],
+      "notes": "Evaluates revised draft with temp=0.0 for determinism"
+    },
+    {
+      "id": "holler-revision-briefer",
+      "name": "Holler (Revision Briefer)",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [2080, 0],
+      "notes": "Generates creative briefing elements for revision SITREP"
+    },
+    {
+      "parameters": {"jsCode": "// Extract Bishop's evaluation and Holler's briefing, format output"},
+      "id": "3e852ee8-ede1-42e1-acf9-c45aa01376be",
+      "name": "Format Sub-Workflow Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2400, 0],
+      "notes": "Formats output to match W2's expected contract"
+    },
+    {
+      "parameters": {"model": {"__rl": true, "mode": "list", "value": "claude-sonnet-4-5-20250929"}, "options": {"temperature": 0.3}},
+      "id": "0dde72f9-ccfd-4cf4-b338-d478dbc8e0cc",
+      "name": "Hatch Model (Claude Sonnet)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [384, 224]
+    },
+    {
+      "parameters": {"model": {"__rl": true, "mode": "list", "value": "claude-sonnet-4-5-20250929"}, "options": {"temperature": 0.7}},
+      "id": "e1b0b2c5-e488-44bb-aa72-98cf7b812043",
+      "name": "Sugar Model (Claude Sonnet)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [864, 224]
+    },
+    {
+      "parameters": {"model": {"__rl": true, "mode": "list", "value": "claude-sonnet-4-5-20250929"}, "options": {"temperature": 0}},
+      "id": "373b4cae-a75e-44db-bc02-265985b1293a",
+      "name": "Bishop Model (Claude Sonnet)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [1504, 192]
+    },
+    {
+      "parameters": {
+        "toolDescription": "A knowledge base specialist that searches Hattie B's documentation.",
+        "text": "={{ $fromAI('query', 'The search query or question to look up in the knowledge base', 'string') }}",
+        "options": {}
+      },
+      "id": "122b4f21-ab6e-46af-9ab0-d1e0aade8d60",
+      "name": "Librarian",
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [816, 576]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "options": {}
+      },
+      "id": "29393049-3569-4d4a-9f04-a8278c5e0d8b",
+      "name": "Search Knowledge Base",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [1024, 768]
+    },
+    {
+      "parameters": {"endpointUrl": "https://mcp.exa.ai/mcp", "authentication": "headerAuth", "options": {}},
+      "id": "4df200d1-5b76-42a5-a8d6-dcde47d24e06",
+      "name": "Exa MCP Client",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.2,
+      "position": [688, 224]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {"main": [[{"node": "Prepare Revision Context", "type": "main", "index": 0}]]},
+    "Prepare Revision Context": {"main": [[{"node": "Hatch (Revision Analysis)", "type": "main", "index": 0}]]},
+    "Hatch (Revision Analysis)": {"main": [[{"node": "Sugar (Revision Draft)", "type": "main", "index": 0}]]},
+    "Sugar (Revision Draft)": {"main": [[{"node": "Parse Sugar Output", "type": "main", "index": 0}]]},
+    "Parse Sugar Output": {"main": [[{"node": "Bishop (QA Evaluation)", "type": "main", "index": 0}]]},
+    "Bishop (QA Evaluation)": {"main": [[{"node": "Holler (Revision Briefer)", "type": "main", "index": 0}]]},
+    "Holler (Revision Briefer)": {"main": [[{"node": "Format Sub-Workflow Output", "type": "main", "index": 0}]]},
+    "Hatch Model (Claude Sonnet)": {"ai_languageModel": [[{"node": "Hatch (Revision Analysis)", "type": "ai_languageModel", "index": 0}]]},
+    "Sugar Model (Claude Sonnet)": {"ai_languageModel": [[{"node": "Sugar (Revision Draft)", "type": "ai_languageModel", "index": 0}]]},
+    "Bishop Model (Claude Sonnet)": {"ai_languageModel": [[{"node": "Bishop (QA Evaluation)", "type": "ai_languageModel", "index": 0}]]},
+    "Librarian": {"ai_tool": [[{"node": "Hatch (Revision Analysis)", "type": "ai_tool", "index": 0}, {"node": "Sugar (Revision Draft)", "type": "ai_tool", "index": 0}, {"node": "Bishop (QA Evaluation)", "type": "ai_tool", "index": 0}]]},
+    "Exa MCP Client": {"ai_tool": [[{"node": "Hatch (Revision Analysis)", "type": "ai_tool", "index": 0}]]}
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "meta": null,
+  "pinData": null
+}

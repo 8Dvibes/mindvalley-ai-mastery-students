@@ -1,0 +1,68 @@
+{
+  "id": "doRVErMaI31ZSlWx",
+  "name": "Gemini File Search - Delete Document (Webhook)",
+  "description": "Deletes a document from a Gemini File Search Store. Webhook endpoint: POST /kb-delete-document with apiKey and documentId in body.",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "kb-delete-document",
+        "responseMode": "lastNode",
+        "options": {"responseData": "firstEntryJson"}
+      },
+      "id": "Webhook",
+      "name": "Webhook /kb-delete-document",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [280, 300]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const { apiKey, documentId } = $json;\nif (!apiKey) return [{ json: { status: 'ERROR', error: 'apiKey required' } }];\nif (!documentId) return [{ json: { status: 'ERROR', error: 'documentId required' } }];\nreturn [{ json: { apiKey, documentId } }];"
+      },
+      "id": "Validate",
+      "name": "Validate Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 300]
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/{{$json.documentId}}?key={{$json.apiKey}}",
+        "responseFormat": "json"
+      },
+      "id": "Http Request",
+      "name": "Delete in Gemini",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [760, 300]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const res = $json;\nif (res.statusCode && res.statusCode !== 200 && res.statusCode !== 204) {\n  return [{ json: { status: 'ERROR', error: `Gemini returned ${res.statusCode}`, body: res.body || res } }];\n}\nreturn [{ json: { status: 'SUCCESS', deleted: true } }];"
+      },
+      "id": "Return",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1000, 300]
+    }
+  ],
+  "connections": {
+    "Webhook /kb-delete-document": {"main": [[{"node": "Validate Input", "type": "main", "index": 0}]]},
+    "Validate Input": {"main": [[{"node": "Delete in Gemini", "type": "main", "index": 0}]]},
+    "Delete in Gemini": {"main": [[{"node": "Format Response", "type": "main", "index": 0}]]}
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "meta": null,
+  "pinData": null
+}

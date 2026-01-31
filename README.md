@@ -2,6 +2,21 @@
 
 Welcome to the AI Automation Mastery course! This repository contains everything you need to build production-ready AI automation systems.
 
+---
+
+## What's New (January 2026)
+
+**Complete Video Walkthrough:** [Watch the Full Setup Guide](https://share.descript.com/view/JpaG0ceaiXL)
+
+- **60-minute video walkthrough** - End-to-end demo of the Hattie B's system with setup instructions
+- **All production workflows fixed and tested** - Verified working January 30, 2026
+- **7 new n8n Claude Code skills** - AI-assisted workflow development and debugging
+- **MCP setup documentation** - Connect Claude Code directly to your n8n account
+
+> **Version 1.1.0** | Last Updated: January 30, 2026
+
+---
+
 ## Quick Start
 
 ```bash

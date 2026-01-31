@@ -1,0 +1,612 @@
+{
+  "id": "Pl7ZdR3PNRcgfzMF",
+  "name": "[0] Gmail Trigger → Classify → Route to Pipeline (FIXED)",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "readStatus": "unread"
+        },
+        "options": {}
+      },
+      "id": "a1dc6e81-0362-471a-b2dd-8d2ca9c9de83",
+      "name": "Watch for Emails",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        172
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "WnfSppZMzrMsJHaO",
+          "name": "Gmail account"
+        }
+      },
+      "notes": "CRITICAL SETTINGS:\n1. Simplify = OFF (needed for threadId and labelIds)\n2. Poll every 5 minutes (adjust based on responsiveness needs)\n3. Read Status = Unread only\n\nThis triggers on new unread emails and passes full metadata."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Email Pre-Filter v1.2 - FIXED to work with Extract Full Email Body node\n// 4-layer filtering: Domain, Headers, Patterns, Gmail Categories\n// Catches 60-80% of non-customer emails BEFORE AI classification\n\nconst items = $input.all();\nconst results = [];\n\n// ============ CONFIGURATION ============\nconst COMPANY_DOMAINS = [\n  'hattieb.com',\n  'hattiebshotchicken.com',\n  'aibuildlab.com'\n];\n\nconst AUTO_REPLY_SENDERS = [\n  /noreply@/i,\n  /no-reply@/i,\n  /notifications?@/i,\n  /alerts?@/i,\n  /mailer-daemon@/i,\n  /postmaster@/i,\n  /donotreply@/i\n];\n\nconst AUTO_REPLY_SUBJECTS = [\n  /out of office/i,\n  /automatic reply/i,\n  /auto-reply/i,\n  /auto reply/i,\n  /vacation.*reply/i,\n  /away from (my )?office/i,\n  /delivery status notification/i,\n  /undeliverable/i,\n  /mail delivery failed/i\n];\n\nconst SKIP_GMAIL_CATEGORIES = [\n  'CATEGORY_PROMOTIONS',\n  'CATEGORY_SOCIAL',\n  'SPAM'\n];\n// =========================================\n\nfor (const item of items) {\n  const email = item.json;\n  \n  // Extract email fields - handle BOTH new Extract node output AND old Gmail structure\n  let from, subject, fullBody, emailId, threadId, labelIds, date;\n  \n  if (email.fullEmailBody) {\n    // NEW structure from \"Extract Full Email Body\" node\n    from = email.from || '';\n    subject = email.subject || '';\n    fullBody = email.fullEmailBody;\n    emailId = email.id || email.messageId;\n    threadId = email.threadId;\n    labelIds = email.labelIds || [];\n    date = email.date;\n  } else {\n    // OLD structure from Gmail Trigger (fallback)\n    from = email.from?.text || email.from?.value?.[0]?.address || email.From || '';\n    subject = email.subject || email.Subject || '';\n    fullBody = email.text || email.textPlain || email.body || email.snippet || '';\n    emailId = email.id || email.messageId;\n    threadId = email.threadId;\n    labelIds = email.labelIds || [];\n    date = email.internalDate || email.date;\n  }\n  \n  const fromLower = from.toLowerCase();\n  \n  // Parse headers\n  let headers = {};\n  if (email.payload && email.payload.headers) {\n    email.payload.headers.forEach(h => {\n      headers[h.name.toLowerCase()] = h.value;\n    });\n  } else if (email.headers) {\n    headers = email.headers;\n  }\n  \n  // ============ LAYER 1: OWN DOMAIN (Loop Prevention) ============\n  for (const domain of COMPANY_DOMAINS) {\n    if (fromLower.includes('@' + domain.toLowerCase())) {\n      results.push({\n        json: {\n          skip: true,\n          reason: 'own_domain',\n          classification_override: 'internal',\n          confidence: 1.0,\n          message: `Email from own domain (${domain}) - loop prevention`,\n          email_id: emailId,\n          thread_id: threadId,\n          from: from,\n          subject: subject\n        }\n      });\n      continue;\n    }\n  }\n  if (results.length > 0 && results[results.length - 1].json.skip) continue;\n  \n  // ============ LAYER 2: AUTO-REPLY HEADERS ============\n  const autoReplyHeaders = [\n    'x-auto-response-suppress',\n    'auto-submitted',\n    'x-autoreply',\n    'x-autorespond'\n  ];\n  \n  for (const headerName of autoReplyHeaders) {\n    const headerValue = headers[headerName];\n    if (headerValue && headerValue.toLowerCase() !== 'no') {\n      results.push({\n        json: {\n          skip: true,\n          reason: 'auto_reply_header',\n          classification_override: 'automated',\n          confidence: 1.0,\n          message: `Auto-reply header detected: ${headerName}`,\n          email_id: emailId,\n          thread_id: threadId,\n          from: from,\n          subject: subject\n        }\n      });\n      break;\n    }\n  }\n  if (results.length > 0 && results[results.length - 1].json.skip) continue;\n  \n  // Check Precedence header\n  const precedence = headers['precedence'];\n  if (precedence && /bulk|junk|list/i.test(precedence)) {\n    results.push({\n      json: {\n        skip: true,\n        reason: 'bulk_mail',\n        classification_override: 'automated',\n        confidence: 0.95,\n        message: `Bulk mail header: Precedence: ${precedence}`,\n        email_id: emailId,\n        thread_id: threadId,\n        from: from,\n        subject: subject\n      }\n    });\n    continue;\n  }\n  \n  // ============ LAYER 3: PATTERN MATCHING ============\n  for (const pattern of AUTO_REPLY_SENDERS) {\n    if (pattern.test(fromLower)) {\n      results.push({\n        json: {\n          skip: true,\n          reason: 'auto_reply_sender',\n          classification_override: 'automated',\n          confidence: 0.95,\n          message: `Known auto-reply sender pattern: ${from}`,\n          email_id: emailId,\n          thread_id: threadId,\n          from: from,\n          subject: subject\n        }\n      });\n      break;\n    }\n  }\n  if (results.length > 0 && results[results.length - 1].json.skip) continue;\n  \n  for (const pattern of AUTO_REPLY_SUBJECTS) {\n    if (pattern.test(subject)) {\n      results.push({\n        json: {\n          skip: true,\n          reason: 'auto_reply_subject',\n          classification_override: 'automated',\n          confidence: 0.90,\n          message: `Subject matches auto-reply pattern`,\n          email_id: emailId,\n          thread_id: threadId,\n          from: from,\n          subject: subject\n        }\n      });\n      break;\n    }\n  }\n  if (results.length > 0 && results[results.length - 1].json.skip) continue;\n  \n  // ============ LAYER 4: GMAIL CATEGORIES ============\n  for (const category of SKIP_GMAIL_CATEGORIES) {\n    if (labelIds.includes(category)) {\n      results.push({\n        json: {\n          skip: true,\n          reason: 'gmail_category',\n          classification_override: category === 'SPAM' ? 'spam' : 'automated',\n          confidence: 0.90,\n          message: `Gmail category: ${category}`,\n          email_id: emailId,\n          thread_id: threadId,\n          from: from,\n          subject: subject\n        }\n      });\n      break;\n    }\n  }\n  if (results.length > 0 && results[results.length - 1].json.skip) continue;\n  \n  // ============ PASSED ALL FILTERS ============\n  results.push({\n    json: {\n      skip: false,\n      reason: null,\n      email_data: {\n        id: emailId,\n        thread_id: threadId,\n        from: from,\n        subject: subject,\n        snippet: fullBody.substring(0, 500),\n        body: fullBody,\n        labelIds: labelIds,\n        date: date\n      }\n    }\n  });\n}\n\nreturn results;"
+      },
+      "id": "a803feb2-73da-4bd1-9125-231f1e243201",
+      "name": "Free Filter (Pre-Check)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        16,
+        172
+      ],
+      "notes": "4-layer pre-filter catches 60-80% of emails for FREE:\n\n1. Own Domain - Prevents infinite reply loops (CRITICAL)\n2. Auto-Reply Headers - X-Auto-Response-Suppress, etc.\n3. Pattern Matching - noreply@, Out of Office, etc.\n4. Gmail Categories - Promotions, Social, Spam\n\nv1.1: FIXED email body extraction to get full content, not truncated snippet\n\nEDIT THE COMPANY_DOMAINS ARRAY with your domain(s)."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-skip",
+              "leftValue": "={{ $json.skip }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a4ff004d-dde7-4d25-a9a3-048b32a097f3",
+      "name": "Pre-Filtered?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        240,
+        172
+      ],
+      "notes": "Routes emails based on pre-filter result:\n- TRUE (skip=true): Email was filtered, log and end\n- FALSE (skip=false): Continue to AI classification"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1xTng5h4vCWzFRtEvs05FX1lwguB6Mob-2G_LTgicn4I"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 2063146029,
+          "mode": "list",
+          "cachedResultName": "Pre-Filter Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1xTng5h4vCWzFRtEvs05FX1lwguB6Mob-2G_LTgicn4I/edit#gid=2063146029"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp": "={{ $now.toISO() }}",
+            "email_id": "={{ $json.email_id }}",
+            "from": "={{ $json.from }}",
+            "subject": "={{ $json.subject }}",
+            "reason": "={{ $json.reason }}",
+            "classification": "={{ $json.classification_override }}",
+            "confidence": "={{ $json.confidence }}",
+            "message": "={{ $json.message }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "a51aed4b-c39e-4d0b-a070-61da6e170144",
+      "name": "Log Skipped Email",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        528,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "tc00kMyg3gyauixg",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "Logs pre-filtered emails to Google Sheets."
+    },
+    {
+      "parameters": {
+        "inputText": "={{ 'Subject: ' + $json.email_data.subject + '\\n\\nFrom: ' + $json.email_data.from + '\\n\\nBody: ' + ($json.email_data.snippet || $json.email_data.body).substring(0, 1000) }}",
+        "categories": {
+          "categories": [
+            {
+              "category": "customer_service",
+              "description": "A real customer or potential customer needing help, information, or support. Includes: product questions, order issues, account problems, complaints, feature requests, or general inquiries. WHEN IN DOUBT, USE THIS CATEGORY."
+            },
+            {
+              "category": "spam",
+              "description": "Promotional content, marketing emails, unsolicited offers, or junk mail."
+            },
+            {
+              "category": "internal",
+              "description": "Communications from within the company or related to internal operations."
+            },
+            {
+              "category": "automated",
+              "description": "System-generated emails that don't require human response."
+            },
+            {
+              "category": "other",
+              "description": "Content that doesn't clearly fit the above categories. Use sparingly."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a7e1117d-772c-4747-a36c-84f227c2fcc2",
+      "name": "AI Classification",
+      "type": "@n8n/n8n-nodes-langchain.textClassifier",
+      "typeVersion": 1,
+      "position": [
+        464,
+        344
+      ],
+      "notes": "Classifies email into 5 categories using AI."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "class-result",
+              "name": "classification",
+              "value": "customer_service",
+              "type": "string"
+            },
+            {
+              "id": "class-confidence",
+              "name": "confidence",
+              "value": 0.9,
+              "type": "number"
+            },
+            {
+              "id": "original-email",
+              "name": "email_data",
+              "value": "={{ $('Free Filter (Pre-Check)').item.json.email_data }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a0c81aa2-5715-4df7-8b13-05ffcc478cca",
+      "name": "Format Classification",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        816,
+        344
+      ],
+      "notes": "Formats classification result for logging and routing."
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1xTng5h4vCWzFRtEvs05FX1lwguB6Mob-2G_LTgicn4I"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 871095556,
+          "mode": "list",
+          "cachedResultName": "Classification Log"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp": "={{ $now.toISO() }}",
+            "email_id": "={{ $json.email_data.id }}",
+            "thread_id": "={{ $json.email_data.thread_id }}",
+            "from": "={{ $json.email_data.from }}",
+            "subject": "={{ $json.email_data.subject }}",
+            "classification": "={{ $json.classification }}",
+            "confidence": "={{ $json.confidence }}",
+            "model": "gemini-2.5-flash",
+            "pre_filter": "passed"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "a406b8ae-6fe2-4aaf-a854-0c1773285ded",
+      "name": "Log Classification",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1040,
+        344
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "tc00kMyg3gyauixg",
+          "name": "Google Sheets account"
+        }
+      },
+      "notes": "Logs AI classification results to Google Sheets."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-customer",
+              "leftValue": "={{ $json.classification }}",
+              "rightValue": "customer_service",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a86bb039-3e2c-4783-badd-eeb33a2f6528",
+      "name": "Customer Email?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1264,
+        344
+      ],
+      "notes": "Routes based on classification."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "output-status",
+              "name": "status",
+              "value": "CUSTOMER_EMAIL",
+              "type": "string"
+            },
+            {
+              "id": "output-next",
+              "name": "next_step",
+              "value": "CinnaMon sentiment analysis",
+              "type": "string"
+            },
+            {
+              "id": "output-email",
+              "name": "email_data",
+              "value": "={{ $('Format Classification').item.json.email_data }}",
+              "type": "object"
+            },
+            {
+              "id": "output-classification",
+              "name": "filter_result",
+              "value": "={{ { classification: $json.classification, confidence: $json.confidence } }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a87687e0-7f44-4271-952b-9972f343bf0f",
+      "name": "Continue to CinnaMon",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1488,
+        248
+      ],
+      "notes": "Customer email identified. Output ready for CinnaMon agent."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "archive-status",
+              "name": "status",
+              "value": "FILTERED",
+              "type": "string"
+            },
+            {
+              "id": "archive-reason",
+              "name": "reason",
+              "value": "={{ 'Classified as: ' + $json.classification }}",
+              "type": "string"
+            },
+            {
+              "id": "archive-email",
+              "name": "email_id",
+              "value": "={{ $json.email_data.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a911c8c4-d6c8-4597-b26a-69cafc6a551b",
+      "name": "End (Not Customer)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1488,
+        440
+      ],
+      "notes": "Non-customer email. Workflow ends here."
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "C2KIpNrNjr5TPMq6",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "email_id": "={{ $json.email_data.id }}",
+            "thread_id": "={{ $json.email_data.thread_id }}",
+            "from": "={{ $json.email_data.from }}",
+            "subject": "={{ $json.email_data.subject }}",
+            "body": "={{ $json.email_data.body }}",
+            "timestamp": "={{ $json.email_data.date }}",
+            "classification": "={{ $json.filter_result.classification }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "aexecute-w1-pipeline",
+      "name": "Execute W1 Pipeline",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1712,
+        248
+      ],
+      "notes": "Triggers W1 Email Processing Pipeline with customer email data."
+    },
+    {
+      "parameters": {
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "id": "a36cd1b0-d187-46c4-a82e-b4b76c46626a",
+      "name": "Gemini Flash 2.5",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        536,
+        664
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "EsIdi6D1P4fvQ481",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      },
+      "notes": "Gemini Flash 2.5-Lite for cost-effective classification."
+    },
+    {
+      "parameters": {
+        "url": "=https://gmail.googleapis.com/gmail/v1/users/me/messages/{{ $json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "gmailOAuth2",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "format",
+              "value": "full"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "aget-full-email-http",
+      "name": "Get Full Email via API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -432,
+        172
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "WiXbjg5ZURlWNV65",
+          "name": "tyler@aibuildlab.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract and decode full email body from Gmail API response\nconst message = $input.first().json;\n\nfunction extractEmailBody(message) {\n  const id = message?.id || '';\n  const threadId = message?.threadId || '';\n  const labelIds = message?.labelIds || [];\n  \n  if (!message || !message.payload) {\n    return { \n      id,\n      threadId,\n      labelIds,\n      fullEmailBody: message?.snippet || \"No email content found\",\n      subject: '',\n      from: '',\n      date: ''\n    };\n  }\n  \n  function findPlainText(parts) {\n    for (const part of parts) {\n      if (part.mimeType === 'text/plain' && part.body?.data) {\n        return part.body.data;\n      }\n      if (part.parts) {\n        const found = findPlainText(part.parts);\n        if (found) return found;\n      }\n    }\n    return null;\n  }\n  \n  let encodedBody = null;\n  \n  if (message.payload.body?.data) {\n    encodedBody = message.payload.body.data;\n  } else if (message.payload.parts) {\n    encodedBody = findPlainText(message.payload.parts);\n  }\n  \n  const headers = message.payload.headers || [];\n  const subject = headers.find(h => h.name === 'Subject')?.value || '';\n  const from = headers.find(h => h.name === 'From')?.value || '';\n  const date = headers.find(h => h.name === 'Date')?.value || '';\n  \n  if (!encodedBody) {\n    return {\n      id,\n      threadId,\n      labelIds,\n      fullEmailBody: message.snippet || \"Could not extract email body\",\n      subject,\n      from,\n      date\n    };\n  }\n  \n  const base64url = encodedBody.replace(/-/g, '+').replace(/_/g, '/');\n  const padding = 4 - (base64url.length % 4);\n  const base64 = padding !== 4 ? base64url + '='.repeat(padding) : base64url;\n  \n  try {\n    const decoded = Buffer.from(base64, 'base64').toString('utf8');\n    return { id, threadId, labelIds, fullEmailBody: decoded, subject, from, date };\n  } catch (error) {\n    return { \n      id,\n      threadId,\n      labelIds,\n      fullEmailBody: `Error decoding: ${error.message}`,\n      subject,\n      from,\n      date\n    };\n  }\n}\n\nreturn extractEmailBody(message);"
+      },
+      "id": "aextract-email-body",
+      "name": "Extract Full Email Body",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -208,
+        172
+      ]
+    }
+  ],
+  "connections": {
+    "Watch for Emails": {
+      "main": [
+        [
+          {
+            "node": "Get Full Email via API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Free Filter (Pre-Check)": {
+      "main": [
+        [
+          {
+            "node": "Pre-Filtered?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pre-Filtered?": {
+      "main": [
+        [
+          {
+            "node": "Log Skipped Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Classification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Classification": {
+      "main": [
+        [
+          {
+            "node": "Format Classification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Classification": {
+      "main": [
+        [
+          {
+            "node": "Log Classification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Classification": {
+      "main": [
+        [
+          {
+            "node": "Customer Email?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Customer Email?": {
+      "main": [
+        [
+          {
+            "node": "Continue to CinnaMon",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "End (Not Customer)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Continue to CinnaMon": {
+      "main": [
+        [
+          {
+            "node": "Execute W1 Pipeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Flash 2.5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Classification",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Full Email via API": {
+      "main": [
+        [
+          {
+            "node": "Extract Full Email Body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Full Email Body": {
+      "main": [
+        [
+          {
+            "node": "Free Filter (Pre-Check)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "meta": null,
+  "pinData": null
+}
