@@ -1,0 +1,1 @@
+row_number,execution_id,gmail_thread_id,gmail_message_id,status,sender_email,original_subject,original_body,draft_subject,draft_body,qa_score,qa_status,revision_count,cinnamon_analysis,hatch_analysis,created_at,updated_at,sent_at,human_feedback
