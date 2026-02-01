@@ -9,7 +9,7 @@
       "parameters": {
         "assignments": {
           "assignments": [
-            {"id": "api-key", "name": "gemini_api_key", "value": "***REMOVED***", "type": "string"},
+            {"id": "api-key", "name": "gemini_api_key", "value": "YOUR_GEMINI_API_KEY_HERE", "type": "string"},
             {"id": "default-store", "name": "default_store", "value": "fileSearchStores/hattie-bs-knowledge-base-a4r93m4pxm7k", "type": "string"},
             {"id": "stores", "name": "store_registry", "value": "{\"hattieb\":{\"name\":\"fileSearchStores/hattie-bs-knowledge-base-a4r93m4pxm7k\",\"keywords\":[\"menu\",\"heat\",\"spice\",\"location\",\"hours\",\"policy\",\"catering\",\"gift card\",\"loyalty\",\"coop\",\"chicken\",\"faq\",\"brand\",\"voice\"],\"description\":\"Hattie Bs Hot Chicken knowledge base\"}}", "type": "string"},
             {"id": "max-stores", "name": "max_stores_per_query", "value": 5, "type": "number"},
